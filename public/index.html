@@ -205,7 +205,7 @@
                   </tr>
                   <tr v-if="generations.length === 0">
                     <td colspan="7" class="py-12 text-center text-gray-500 font-bold">
-                      No generations logs found in the database database.
+                      No generations logs found in the database.
                     </td>
                   </tr>
                 </tbody>
@@ -217,51 +217,109 @@
         <!-- TAB 2: PROMPTS CONFIGURATION -->
         <div v-if="activeTab === 'prompts'" class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <!-- Sidebar selector -->
-          <div class="md:col-span-1 space-y-2">
+          <div class="md:col-span-1 space-y-2 text-left">
             <h2 class="text-xl font-extrabold text-white mb-4">Prompt Filters</h2>
+            
+            <div class="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
+              <button 
+                v-for="prompt in prompts" 
+                :key="prompt.name"
+                @click="selectPrompt(prompt)"
+                :class="[selectedPrompt && selectedPrompt.name === prompt.name ? 'border-[#66fcf1] bg-[#66fcf1]/10 text-white font-bold' : 'border-gray-800 bg-[#1f2833] hover:bg-[#202b38] text-gray-300']"
+                class="w-full text-left p-3.5 rounded-2xl border text-xs uppercase tracking-wider transition-all flex items-center justify-between"
+              >
+                <span>{{ prompt.name }}</span>
+                <i class="fa-solid fa-angle-right"></i>
+              </button>
+            </div>
+
+            <!-- Create new filter button -->
             <button 
-              v-for="prompt in prompts" 
-              :key="prompt.name"
-              @click="selectPrompt(prompt)"
-              :class="[selectedPrompt && selectedPrompt.name === prompt.name ? 'border-[#66fcf1] bg-[#66fcf1]/10 text-white font-bold' : 'border-gray-800 bg-[#1f2833] hover:bg-[#202b38] text-gray-300']"
-              class="w-full text-left p-3.5 rounded-2xl border text-xs uppercase tracking-wider transition-all flex items-center justify-between"
+              @click="createNewPrompt"
+              class="w-full mt-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 p-3.5 rounded-2xl text-xs uppercase font-extrabold tracking-wider transition-all text-center flex items-center justify-center gap-1.5"
             >
-              <span>{{ prompt.name }}</span>
-              <i class="fa-solid fa-angle-right"></i>
+              <i class="fa-solid fa-circle-plus"></i> New Filter Style
             </button>
           </div>
 
           <!-- Editor area -->
-          <div class="md:col-span-3">
+          <div class="md:col-span-3 text-left">
             <div v-if="selectedPrompt" class="bg-[#1f2833] border border-gray-800 rounded-3xl p-6 space-y-4 shadow-2xl">
               <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <div>
-                  <h3 class="text-lg font-extrabold text-white uppercase tracking-wider">{{ selectedPrompt.name }}</h3>
-                  <p class="text-xs text-gray-400">Configure instructions passed to the Gemini AI API models.</p>
+                  <h3 class="text-lg font-extrabold text-white uppercase tracking-wider">
+                    {{ selectedPrompt.isNew ? 'New Custom Filter' : selectedPrompt.name }}
+                  </h3>
+                  <p class="text-xs text-gray-400">Configure instructions, subheadings and gradients passed to frontend lookbook.</p>
                 </div>
                 <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-white/5 border border-white/10 tracking-widest text-[#66fcf1]">
                   {{ selectedPrompt.name === 'Video Snap' ? 'Video' : 'Sticker' }}
                 </span>
               </div>
 
-              <div class="space-y-2 text-left">
-                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">System prompt</label>
-                <textarea 
-                  v-model="selectedPrompt.prompt_text"
-                  rows="16"
-                  class="w-full bg-[#0b0c10] border border-gray-800 text-gray-200 rounded-2xl p-4 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#66fcf1] transition-all resize-y"
-                ></textarea>
-                <p v-if="selectedPrompt.name === 'Video Snap'" class="text-[10px] text-yellow-500 font-bold leading-normal">
-                  <i class="fa-solid fa-circle-info mr-1"></i> Gunakan variable <code>${channelName}</code> atau tag <code>@CODX</code> untuk menyisipkan nama channel dinamis yang diinput pengunjung.
-                </p>
+              <!-- Input Fields -->
+              <div class="grid grid-cols-1 gap-4">
+                <!-- Name (Editable only if new) -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Style Name (Primary Key)</label>
+                  <input 
+                    v-model="selectedPrompt.name"
+                    type="text"
+                    :disabled="!selectedPrompt.isNew"
+                    placeholder="e.g. Vintage Anime"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1] disabled:opacity-50"
+                  />
+                </div>
+
+                <!-- Subtitle -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Subtitle (Frontend Label)</label>
+                  <input 
+                    v-model="selectedPrompt.subtitle"
+                    type="text"
+                    placeholder="e.g. Retro anime style · neon borders · classic"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  />
+                </div>
+
+                <!-- Gradient background -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Gradient background (Frontend Badge Style)</label>
+                  <input 
+                    v-model="selectedPrompt.gradient"
+                    type="text"
+                    placeholder="linear-gradient(160deg, #ff007f, #7f00ff)"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  />
+                </div>
+
+                <!-- Prompt text -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">System prompt instruction</label>
+                  <textarea 
+                    v-model="selectedPrompt.prompt_text"
+                    rows="10"
+                    class="w-full bg-[#0b0c10] border border-gray-800 text-gray-200 rounded-2xl p-4 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#66fcf1] transition-all resize-y"
+                  ></textarea>
+                </div>
               </div>
 
-              <div class="flex justify-end">
+              <!-- Action buttons -->
+              <div class="flex justify-between items-center pt-2">
+                <button 
+                  v-if="selectedPrompt.name !== 'Video Snap'"
+                  @click="deletePrompt(selectedPrompt.name)" 
+                  class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-extrabold px-5 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
+                >
+                  Delete Filter
+                </button>
+                <div v-else></div>
+
                 <button 
                   @click="savePrompt" 
                   class="bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
                 >
-                  Save Prompt Template
+                  Save Prompt Style
                 </button>
               </div>
             </div>
@@ -503,7 +561,22 @@
           selectedPrompt.value = { ...prompt };
         };
 
+        const createNewPrompt = () => {
+          const newStyle = {
+            name: '',
+            subtitle: '',
+            gradient: 'linear-gradient(160deg, #5457e6, #0b0d14)',
+            prompt_text: '',
+            isNew: true
+          };
+          selectedPrompt.value = newStyle;
+        };
+
         const savePrompt = async () => {
+          if (!selectedPrompt.value.name.trim()) {
+            triggerAlert('Name cannot be empty.', 'error');
+            return;
+          }
           try {
             const res = await fetch('/api/admin/prompts', {
               method: 'POST',
@@ -515,7 +588,29 @@
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
-            triggerAlert(`Prompt for "${selectedPrompt.value.name}" saved!`);
+            triggerAlert(`Prompt style for "${selectedPrompt.value.name}" saved!`);
+            
+            const savedName = selectedPrompt.value.name;
+            await fetchPrompts();
+            
+            // Re-select saved item to clear isNew flag
+            const found = prompts.value.find(p => p.name === savedName);
+            if (found) selectedPrompt.value = { ...found };
+          } catch (e) {
+            triggerAlert(e.message, 'error');
+          }
+        };
+
+        const deletePrompt = async (name) => {
+          if (!confirm(`Are you sure you want to delete filter style "${name}"?`)) return;
+          try {
+            const res = await fetch(`/api/admin/prompts/${encodeURIComponent(name)}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token.value}` }
+            });
+            if (!res.ok) throw new Error('Delete failed.');
+            triggerAlert(`Filter style "${name}" deleted successfully.`);
+            selectedPrompt.value = null;
             fetchPrompts();
           } catch (e) {
             triggerAlert(e.message, 'error');
@@ -571,8 +666,6 @@
 
         const downloadFile = (dataUrl, mode, name, id) => {
           if (!dataUrl) return;
-          // check if it is raw dataUrl or a direct URL path
-          const isBase64 = dataUrl.startsWith('data:');
           const a = document.createElement('a');
           a.href = dataUrl;
           const slug = name.toLowerCase().replace(/\s+/g, '_');
@@ -611,7 +704,9 @@
           logout,
           saveSettings,
           selectPrompt,
+          createNewPrompt,
           savePrompt,
+          deletePrompt,
           fetchGenerations,
           deleteLog,
           generateNewClientKey,

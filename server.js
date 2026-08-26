@@ -59,6 +59,20 @@ function verifyAdminToken(req, res, next) {
 // PUBLIC CLIENT GENERATION API ENDPOINTS
 // ==========================================
 
+// 0. Fetch Active Filters list (exposing name, subtitle, gradient; hiding raw prompt_text for security)
+app.get('/api/filters', verifyClientApiKey, async (req, res) => {
+  try {
+    const db = await getDatabase();
+    // Exclude 'Video Snap' since frontend is focusing on AI Image Lookbook
+    const filters = await db.all(
+      "SELECT name, subtitle, gradient FROM prompts WHERE name != 'Video Snap'"
+    );
+    res.json(filters);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch filters: ' + err.message });
+  }
+});
+
 // 1. Generate Sticker (Photo) Endpoint
 app.post('/api/generate-sticker', verifyClientApiKey, async (req, res) => {
   const { photoBase64, filterName, userId } = req.body;
@@ -169,7 +183,6 @@ app.post('/api/generate-video', verifyClientApiKey, async (req, res) => {
     if (settings.mock_ai_generation === 1) {
       // Mock generation fallback
       await new Promise(resolve => setTimeout(resolve, 3500));
-      // Base64 of a very short blank MP4 payload or test url
       resultVideoData = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4';
     } else {
       if (!settings.gemini_api_key) {
@@ -179,7 +192,6 @@ app.post('/api/generate-video', verifyClientApiKey, async (req, res) => {
       const cleanImageBase64 = photoBase64.replace(/^data:image\/\w+;base64,/, '');
       const requestUrl = `${settings.gemini_api_endpoint}/v1beta/interactions?key=${settings.gemini_api_key}`;
 
-      // Insert channel name dynamically into prompt
       const finalPromptText = promptConfig.prompt_text
         .replace(/\$\{channelName\}/g, finalChannelName)
         .replace(/\${channelName}/g, finalChannelName)
@@ -316,7 +328,7 @@ app.post('/api/admin/settings', verifyAdminToken, async (req, res) => {
   }
 });
 
-// Fetch All Prompts
+// Fetch All Prompts (Admin complete details)
 app.get('/api/admin/prompts', verifyAdminToken, async (req, res) => {
   try {
     const db = await getDatabase();
@@ -327,17 +339,32 @@ app.get('/api/admin/prompts', verifyAdminToken, async (req, res) => {
   }
 });
 
-// Update Prompt Template
+// Save / Update a Prompt (Admin CMS edit)
 app.post('/api/admin/prompts', verifyAdminToken, async (req, res) => {
-  const { name, prompt_text } = req.body;
+  const { name, subtitle, gradient, prompt_text } = req.body;
   if (!name || prompt_text === undefined) {
     return res.status(400).json({ error: 'Missing name or prompt_text.' });
   }
 
   try {
     const db = await getDatabase();
-    await db.run('INSERT OR REPLACE INTO prompts (name, prompt_text) VALUES (?, ?)', [name, prompt_text]);
+    await db.run(
+      'INSERT OR REPLACE INTO prompts (name, subtitle, gradient, prompt_text) VALUES (?, ?, ?, ?)', 
+      [name, subtitle || '', gradient || '', prompt_text]
+    );
     res.json({ success: true, message: `Prompt template "${name}" updated.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete Prompt Filter (Admin CMS delete)
+app.delete('/api/admin/prompts/:name', verifyAdminToken, async (req, res) => {
+  const { name } = req.params;
+  try {
+    const db = await getDatabase();
+    await db.run('DELETE FROM prompts WHERE name = ?', [name]);
+    res.json({ success: true, message: `Prompt template "${name}" deleted.` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

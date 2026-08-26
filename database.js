@@ -15,7 +15,7 @@ async function getDatabase() {
     driver: sqlite3.Database
   });
 
-  // Create tables
+  // Create tables with expanded prompts schema
   await db.exec(`
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY DEFAULT 1,
@@ -28,7 +28,9 @@ async function getDatabase() {
 
     CREATE TABLE IF NOT EXISTS prompts (
       name TEXT PRIMARY KEY,
-      prompt_text TEXT
+      prompt_text TEXT,
+      subtitle TEXT,
+      gradient TEXT
     );
 
     CREATE TABLE IF NOT EXISTS generations (
@@ -57,7 +59,10 @@ async function getDatabase() {
   const promptsCount = await db.get('SELECT COUNT(*) as count FROM prompts');
   if (promptsCount.count === 0) {
     const defaultPrompts = {
-      'Renaissance Painting': `Use uploaded photo as identity reference.
+      'Renaissance Painting': {
+        subtitle: 'Oil painting · museum frame · classic',
+        gradient: 'linear-gradient(160deg, #a8c0ff, #3f2b96)',
+        prompt_text: `Use uploaded photo as identity reference.
 Create 1:1 Renaissance oil painting framed portrait sticker mockup.
 
 Preserve exact facial likeness and identity.
@@ -88,9 +93,12 @@ Final look:
 half-body Renaissance portrait, ornate museum frame, one unified framed sticker, subtle shadow, plain white background outside, premium print-ready mockup.
 
 Avoid:
-full body, character cutout, white outline around person, floating figure, modern clothing, text, logo, watermark, anime, cartoon.`,
-
-      'Action Toys': `Use the uploaded image as the main identity reference.
+full body, character cutout, white outline around person, floating figure, modern clothing, text, logo, watermark, anime, cartoon.`
+      },
+      'Action Toys': {
+        subtitle: 'Action figure · poseable joints · plastic',
+        gradient: 'linear-gradient(160deg, #11998e, #38ef7d)',
+        prompt_text: `Use the uploaded image as the main identity reference.
 
 VERY IMPORTANT:
 Preserve the person’s recognizable face, facial features, hairstyle or head covering if present, facial hair if present, expression, skin tone, body proportion, and overall identity.
@@ -157,9 +165,12 @@ No distorted face.
 No extra fingers.
 No extra limbs.
 
-Create the sticker as one unified silhouette. All background and prop elements must connect to the main figure or base. Do not use floating or isolated decorative elements. Keep the outer contour clean, compact, stable, and easy to read for die-cut sticker cutting.`,
-
-      'Cereal Box': `Use the uploaded photo as the main identity reference.
+Create the sticker as one unified silhouette. All background and prop elements must connect to the main figure or base. Do not use floating or isolated decorative elements. Keep the outer contour clean, compact, stable, and easy to read for die-cut sticker cutting.`
+      },
+      'Cereal Box': {
+        subtitle: '1970s cartoon · Banana Flakes · retro mascot',
+        gradient: 'linear-gradient(160deg, #f12711, #f5af19)',
+        prompt_text: `Use the uploaded photo as the main identity reference.
 
 Create a retro 1970s cereal box sticker design called “Banana Flakes”.
 
@@ -212,9 +223,12 @@ Avoid: generic cartoon face, random man face, random woman face, inaccurate like
 
 Keyline:
 Preserve identity and presentation. Adapt the character respectfully. Maintain appropriate coverage based on the original character. If head covering is present, keep it. If modest styling is implied, preserve it. 
-Facial resemblance is the highest priority. Even in a retro cartoon style, the character must look unmistakably like the person in the uploaded photo.`,
-
-      '90s Sitcom': `Turn the input character into a premium, photorealistic 90s family sitcom die-cut sticker.
+Facial resemblance is the highest priority. Even in a retro cartoon style, the character must look unmistakably like the person in the uploaded photo.`
+      },
+      '90s Sitcom': {
+        subtitle: 'Family sitcom · vintage setup · photorealism',
+        gradient: 'linear-gradient(160deg, #F7971E, #FFD200)',
+        prompt_text: `Turn the input character into a premium, photorealistic 90s family sitcom die-cut sticker.
 
 CANVAS / EXPORT AREA RULE:
 The final image must be composed on a perfect 1:1 square canvas / artboard.
@@ -313,9 +327,12 @@ AVOID:
 - border around the full canvas
 - portrait export
 - landscape export
-- non-square export`,
-
-      'Pixel Art': `Use the input photo as the reference to create a premium collectible die-cut sticker in authentic 16-bit pixel art style, inspired by classic 1990s arcade fighting games.
+- non-square export`
+      },
+      'Pixel Art': {
+        subtitle: '16-bit arcade sprite · medieval knight · retro',
+        gradient: 'linear-gradient(160deg, #8A2387, #E94057)',
+        prompt_text: `Use the input photo as the reference to create a premium collectible die-cut sticker in authentic 16-bit pixel art style, inspired by classic 1990s arcade fighting games.
 
 ## Character
 
@@ -429,9 +446,12 @@ Do NOT include:
 - Blurry pixel art
 - Modern clothing
 
-The final result should look like a premium collectible 16-bit medieval knight die-cut sticker that could be sold as official merchandise, with a single clean die-cut outline surrounding the entire integrated artwork.`,
-
-      'Y2K Nostalgia': `Use the uploaded image as the main identity reference.
+The final result should look like a premium collectible 16-bit medieval knight die-cut sticker that could be sold as official merchandise, with a single clean die-cut outline surrounding the entire integrated artwork.`
+      },
+      'Y2K Nostalgia': {
+        subtitle: 'Streetwear · slouched hoodie · Frutiger Aero',
+        gradient: 'linear-gradient(160deg, #00c6ff, #0072ff)',
+        prompt_text: `Use the uploaded image as the main identity reference.
 
 Preserve the person’s recognizable face, facial features, hairstyle, skin tone, and overall identity, but transform the final image into a stylized premium Y2K fashion die-cut sticker artwork, not a simple photo cutout.
 
@@ -526,9 +546,12 @@ The final sticker must have ONLY ONE print area.
 Do not make the character one sticker and the aero background another sticker.
 Do not create a separate soft blob or aura shape behind the person.
 All visual elements must be fused into one compact unified silhouette with one continuous white die-cut border.
-If any decorative element is used, it must connect visually to the main figure so the final cut shape reads as one single sticker only.`,
-
-      'Bali-esque': `You are an expert illustrator specializing in premium collectible die-cut sticker artwork for print production.
+If any decorative element is used, it must connect visually to the main figure so the final cut shape reads as one single sticker only.`
+      },
+      'Bali-esque': {
+        subtitle: 'Bali scenery · traditional kamboja · tropical',
+        gradient: 'linear-gradient(160deg, #134E5E, #71B280)',
+        prompt_text: `You are an expert illustrator specializing in premium collectible die-cut sticker artwork for print production.
 
 Create a premium Bali-inspired full-body collectible die-cut sticker illustration from the uploaded photo.
 
@@ -737,9 +760,12 @@ The sticker shape must remain organic and unified.
 The square canvas is only the export area, not the sticker shape.
 
 NEGATIVE PROMPT:
-changed identity, different person, generic face, over-beautified face, masculinized subject, feminized subject, changed age, changed skin tone, changed eye shape, changed nose shape, changed mouth shape, changed jawline, hairstyle drift, hair length change, head covering removed, hijab removed, exposed hair under hijab, glasses removed, facial hair removed, changed body type, revealing outfit, exposed midriff, exposed cleavage, exposed shoulders, exposed covered body areas, outfit replaced, full traditional Balinese costume, ceremonial costume, dancer costume, fantasy costume, hotel staff outfit, tourist costume, over-accessorized character, inaccurate ritual attire, multiple characters, cropped body, cropped feet, cropped hands, half-body only, bust portrait, photorealistic output, low-quality cartoon, chibi style, dark fantasy, horror style, separate character sticker, separate background sticker, disconnected props, floating background elements, multiple cut areas, multiple white outlines, inner white outline around character, sticker inside sticker, layered sticker look, messy silhouette, broken cutline, cluttered background, text, logo, watermark, blurry, noisy, low resolution, portrait export, landscape export, non-square export, vertical canvas, horizontal canvas, cutline following canvas edge, border around the full canvas, sticker touching canvas edge, square sticker shape, rectangular sticker shape, box-shaped sticker`,
-
-      'Video Snap': `Generate a stylized transformation video of the subject from the attached photo, snapping their fingers 4 times. Camera is static — no zoom, no pan.
+changed identity, different person, generic face, over-beautified face, masculinized subject, feminized subject, changed age, changed skin tone, changed eye shape, changed nose shape, changed mouth shape, changed jawline, hairstyle drift, hair length change, head covering removed, hijab removed, exposed hair under hijab, glasses removed, facial hair removed, changed body type, revealing outfit, exposed midriff, exposed cleavage, exposed shoulders, exposed covered body areas, outfit replaced, full traditional Balinese costume, ceremonial costume, dancer costume, fantasy costume, hotel staff outfit, tourist costume, over-accessorized character, inaccurate ritual attire, multiple characters, cropped body, cropped feet, cropped hands, half-body only, bust portrait, photorealistic output, low-quality cartoon, chibi style, dark fantasy, horror style, separate character sticker, separate background sticker, disconnected props, floating background elements, multiple cut areas, multiple white outlines, inner white outline around character, sticker inside sticker, layered sticker look, messy silhouette, broken cutline, cluttered background, text, logo, watermark, blurry, noisy, low resolution, portrait export, landscape export, non-square export, vertical canvas, horizontal canvas, cutline following canvas edge, border around the full canvas, sticker touching canvas edge, square sticker shape, rectangular sticker shape, box-shaped sticker`
+      },
+      'Video Snap': {
+        subtitle: 'Video timeline · Wes Anderson & Ghibli · 9:16',
+        gradient: 'linear-gradient(160deg, #ff0055, #7a00ff)',
+        prompt_text: `Generate a stylized transformation video of the subject from the attached photo, snapping their fingers 4 times. Camera is static — no zoom, no pan.
 
 Maintain a consistent character identity and appearance across all styles (same facial structure, hairstyle, and expression), even as the visual style changes.
 
@@ -761,10 +787,14 @@ Style guidance:
 - Character identity, pose, and hand action stay consistent across all segments.
 - Each segment runs approximately 1–1.5 seconds.
 - Output format: portrait 9:16.`
+      }
     };
 
-    for (const [name, text] of Object.entries(defaultPrompts)) {
-      await db.run('INSERT OR IGNORE INTO prompts (name, prompt_text) VALUES (?, ?)', [name, text]);
+    for (const [name, data] of Object.entries(defaultPrompts)) {
+      await db.run(
+        'INSERT OR IGNORE INTO prompts (name, subtitle, gradient, prompt_text) VALUES (?, ?, ?, ?)',
+        [name, data.subtitle, data.gradient, data.prompt_text]
+      );
     }
   }
 
