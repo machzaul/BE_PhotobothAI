@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS - Photobooth AI Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;850&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0c10] text-[#c5c6c7] min-h-screen flex flex-col justify-between">
+
+  <div id="app" class="w-full flex-1 flex flex-col">
+    <!-- ================= AUTH LOGIN SCREEN ================= -->
+    <div v-if="!token" class="flex-1 flex items-center justify-center px-4 py-12">
+      <div class="max-w-md w-full space-y-8 bg-[#1f2833] p-8 rounded-3xl border border-[#45f3ff]/20 shadow-2xl">
+        <div class="text-center">
+          <i class="fa-solid fa-camera-retro text-5xl text-[#66fcf1] mb-3"></i>
+          <h2 class="text-2xl font-extrabold text-white tracking-wide">PHOTOBOOTH AI</h2>
+          <p class="mt-2 text-xs text-gray-400">Admin Control Center & CMS Portal</p>
+        </div>
+        <form class="mt-8 space-y-6" @submit.prevent="login">
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label for="password" class="sr-only">Password</label>
+              <input 
+                id="password" 
+                v-model="loginPassword" 
+                type="password" 
+                required 
+                class="appearance-none rounded-xl relative block w-full px-4 py-3.5 border border-gray-700 bg-[#0b0c10] text-white focus:outline-none focus:ring-2 focus:ring-[#66fcf1]/50 focus:border-[#66fcf1] text-center text-lg font-bold" 
+                placeholder="••••••••"
+              >
+            </div>
+          </div>
+
+          <div v-if="error" class="text-red-400 text-xs text-center font-bold bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
+            {{ error }}
+          </div>
+
+          <div>
+            <button 
+              type="submit" 
+              class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-extrabold rounded-xl text-black bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#66fcf1] transition-all"
+            >
+              Sign In
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= ADMIN CMS DASHBOARD WORKSPACE ================= -->
+    <div v-else class="flex-1 flex flex-col">
+      <!-- Top Navigation Header -->
+      <nav class="bg-[#1f2833] border-b border-gray-800 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between h-16">
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-sliders text-xl text-[#66fcf1]"></i>
+              <span class="text-lg font-extrabold text-white tracking-widest">BE_PHOTOBOOTH_AI</span>
+            </div>
+            
+            <div class="flex items-center gap-6">
+              <div class="flex space-x-1.5">
+                <button 
+                  @click="activeTab = 'history'" 
+                  :class="[activeTab === 'history' ? 'bg-[#66fcf1] text-black font-extrabold' : 'text-gray-300 hover:bg-[#0b0c10] hover:text-white']" 
+                  class="px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
+                >
+                  <i class="fa-solid fa-images mr-1.5"></i>Generations
+                </button>
+                <button 
+                  @click="activeTab = 'prompts'" 
+                  :class="[activeTab === 'prompts' ? 'bg-[#66fcf1] text-black font-extrabold' : 'text-gray-300 hover:bg-[#0b0c10] hover:text-white']" 
+                  class="px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
+                >
+                  <i class="fa-solid fa-file-code mr-1.5"></i>Prompts Config
+                </button>
+                <button 
+                  @click="activeTab = 'settings'" 
+                  :class="[activeTab === 'settings' ? 'bg-[#66fcf1] text-black font-extrabold' : 'text-gray-300 hover:bg-[#0b0c10] hover:text-white']" 
+                  class="px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
+                >
+                  <i class="fa-solid fa-gears mr-1.5"></i>API Settings
+                </button>
+              </div>
+
+              <button 
+                @click="logout" 
+                class="text-xs uppercase text-red-400 hover:text-red-300 font-bold border border-red-500/20 hover:border-red-500/50 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Logout <i class="fa-solid fa-arrow-right-from-bracket ml-1"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Body Container -->
+      <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Alerts Banner -->
+        <div v-if="alert" :class="[alert.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400']" class="mb-6 p-4 rounded-2xl border text-xs font-bold flex justify-between items-center shadow-lg">
+          <span>{{ alert.message }}</span>
+          <button @click="alert = null" class="text-current opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- TAB 1: GENERATION LOG HISTORY -->
+        <div v-if="activeTab === 'history'" class="space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-xl font-extrabold text-white">Generations History Log</h2>
+              <p class="text-xs text-gray-400">Review, view captures, and download images or videos created by booth users.</p>
+            </div>
+            <button @click="fetchGenerations" class="bg-[#1f2833] hover:bg-[#202b38] border border-gray-800 px-4 py-2.5 rounded-xl text-xs text-white font-bold transition-all">
+              <i class="fa-solid fa-rotate mr-1.5"></i>Refresh
+            </button>
+          </div>
+
+          <!-- History Grid/Table Card -->
+          <div class="bg-[#1f2833] rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-gray-800 bg-[#0b0c10]/40 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    <th class="py-4 px-6">ID</th>
+                    <th class="py-4 px-6">User/IP</th>
+                    <th class="py-4 px-6">Timestamp</th>
+                    <th class="py-4 px-6">Mode / Filter</th>
+                    <th class="py-4 px-6 text-center">Camera Capture</th>
+                    <th class="py-4 px-6 text-center">Generated Output</th>
+                    <th class="py-4 px-6 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800 text-xs font-semibold">
+                  <tr v-for="log in generations" :key="log.id" class="hover:bg-[#202b38]/40 transition-colors">
+                    <td class="py-4 px-6 font-mono text-[#66fcf1]">{{ log.id }}</td>
+                    <td class="py-4 px-6 font-mono text-gray-300">{{ log.user_id }}</td>
+                    <td class="py-4 px-6 text-gray-400">{{ formatTimestamp(log.created_at) }}</td>
+                    <td class="py-4 px-6">
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide mr-1.5" :class="[log.booth_mode === 'sticker' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20']">
+                        {{ log.booth_mode }}
+                      </span>
+                      <span class="text-white">{{ log.filter_name }}</span>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                      <div class="flex justify-center">
+                        <img 
+                          v-if="log.captured_frame" 
+                          :src="log.captured_frame" 
+                          @click="openLightbox(log.captured_frame, 'image')"
+                          class="w-10 h-10 object-cover rounded-xl border border-gray-700 cursor-zoom-in hover:scale-105 transition-transform" 
+                        />
+                        <span v-else class="text-gray-500">-</span>
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                      <div class="flex justify-center">
+                        <!-- Sticker Preview image -->
+                        <img 
+                          v-if="log.booth_mode === 'sticker' && log.generated_output" 
+                          :src="log.generated_output" 
+                          @click="openLightbox(log.generated_output, 'image')"
+                          class="w-10 h-10 object-contain rounded-xl border border-gray-700 cursor-zoom-in hover:scale-105 transition-transform bg-[#0b0c10]" 
+                        />
+                        <!-- Video Preview play trigger -->
+                        <button 
+                          v-else-if="log.booth_mode === 'video' && log.generated_output" 
+                          @click="openLightbox(log.generated_output, 'video')"
+                          class="w-10 h-10 rounded-xl border border-gray-700 bg-[#0b0c10] flex items-center justify-center hover:text-[#66fcf1] transition-colors"
+                        >
+                          <i class="fa-solid fa-circle-play text-lg text-purple-400"></i>
+                        </button>
+                        <span v-else class="text-gray-500">-</span>
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button 
+                          @click="downloadFile(log.generated_output, log.booth_mode, log.filter_name, log.id)"
+                          class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+                          title="Download creation"
+                        >
+                          <i class="fa-solid fa-download"></i>
+                        </button>
+                        <button 
+                          @click="deleteLog(log.id)"
+                          class="p-2 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 transition-colors"
+                          title="Delete entry"
+                        >
+                          <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="generations.length === 0">
+                    <td colspan="7" class="py-12 text-center text-gray-500 font-bold">
+                      No generations logs found in the database.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: PROMPTS CONFIGURATION -->
+        <div v-if="activeTab === 'prompts'" class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <!-- Sidebar selector -->
+          <div class="md:col-span-1 space-y-2 text-left">
+            <h2 class="text-xl font-extrabold text-white mb-4">Prompt Filters</h2>
+            
+            <div class="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
+              <button 
+                v-for="prompt in prompts" 
+                :key="prompt.name"
+                @click="selectPrompt(prompt)"
+                :class="[selectedPrompt && selectedPrompt.name === prompt.name ? 'border-[#66fcf1] bg-[#66fcf1]/10 text-white font-bold' : 'border-gray-800 bg-[#1f2833] hover:bg-[#202b38] text-gray-300']"
+                class="w-full text-left p-3.5 rounded-2xl border text-xs uppercase tracking-wider transition-all flex items-center justify-between"
+              >
+                <span>{{ prompt.name }}</span>
+                <i class="fa-solid fa-angle-right"></i>
+              </button>
+            </div>
+
+            <!-- Create new filter button -->
+            <button 
+              @click="createNewPrompt"
+              class="w-full mt-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 p-3.5 rounded-2xl text-xs uppercase font-extrabold tracking-wider transition-all text-center flex items-center justify-center gap-1.5"
+            >
+              <i class="fa-solid fa-circle-plus"></i> New Filter Style
+            </button>
+          </div>
+
+          <!-- Editor area -->
+          <div class="md:col-span-3 text-left">
+            <div v-if="selectedPrompt" class="bg-[#1f2833] border border-gray-800 rounded-3xl p-6 space-y-4 shadow-2xl">
+              <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <div>
+                  <h3 class="text-lg font-extrabold text-white uppercase tracking-wider">
+                    {{ selectedPrompt.isNew ? 'New Custom Filter' : selectedPrompt.name }}
+                  </h3>
+                  <p class="text-xs text-gray-400">Configure instructions, subheadings and gradients passed to frontend lookbook.</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-white/5 border border-white/10 tracking-widest text-[#66fcf1]">
+                  {{ selectedPrompt.name === 'Video Snap' ? 'Video' : 'Sticker' }}
+                </span>
+              </div>
+
+              <!-- Input Fields -->
+              <div class="grid grid-cols-1 gap-4">
+                <!-- Name (Editable only if new) -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Style Name (Primary Key)</label>
+                  <input 
+                    v-model="selectedPrompt.name"
+                    type="text"
+                    :disabled="!selectedPrompt.isNew"
+                    placeholder="e.g. Vintage Anime"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1] disabled:opacity-50"
+                  />
+                </div>
+
+                <!-- Subtitle -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Subtitle (Frontend Label)</label>
+                  <input 
+                    v-model="selectedPrompt.subtitle"
+                    type="text"
+                    placeholder="e.g. Retro anime style · neon borders · classic"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  />
+                </div>
+
+                <!-- Gradient background -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Gradient background (Frontend Badge Style)</label>
+                  <input 
+                    v-model="selectedPrompt.gradient"
+                    type="text"
+                    placeholder="linear-gradient(160deg, #ff007f, #7f00ff)"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  />
+                </div>
+
+                <!-- Prompt text -->
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">System prompt instruction</label>
+                  <textarea 
+                    v-model="selectedPrompt.prompt_text"
+                    rows="10"
+                    class="w-full bg-[#0b0c10] border border-gray-800 text-gray-200 rounded-2xl p-4 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#66fcf1] transition-all resize-y"
+                  ></textarea>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="flex justify-between items-center pt-2">
+                <button 
+                  v-if="selectedPrompt.name !== 'Video Snap'"
+                  @click="deletePrompt(selectedPrompt.name)" 
+                  class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-extrabold px-5 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
+                >
+                  Delete Filter
+                </button>
+                <div v-else></div>
+
+                <button 
+                  @click="savePrompt" 
+                  class="bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
+                >
+                  Save Prompt Style
+                </button>
+              </div>
+            </div>
+            <div v-else class="h-full bg-[#1f2833]/30 border border-dashed border-gray-800 rounded-3xl flex items-center justify-center p-12 text-gray-500 font-bold">
+              Pilih salah satu filter di kolom kiri untuk mulai mengedit prompt template.
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: API SETTINGS & KEY MANAGEMENT -->
+        <div v-if="activeTab === 'settings'" class="max-w-2xl mx-auto bg-[#1f2833] border border-gray-800 rounded-3xl p-6 space-y-6 shadow-2xl text-left">
+          <div>
+            <h2 class="text-xl font-extrabold text-white">System Settings</h2>
+            <p class="text-xs text-gray-400">Configure key values, database status, and API authentication parameters.</p>
+          </div>
+
+          <div class="space-y-4 divide-y divide-gray-800">
+            <!-- 1. Google Gemini Config -->
+            <div class="space-y-4 pt-1">
+              <h3 class="text-sm font-bold text-[#66fcf1] uppercase tracking-wider">Google Gemini API</h3>
+              
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gemini API Key</label>
+                <input 
+                  v-model="settings.gemini_api_key"
+                  type="text" 
+                  placeholder="AIzaSy..." 
+                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">API Endpoint Url</label>
+                <input 
+                  v-model="settings.gemini_api_endpoint"
+                  type="text" 
+                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                />
+              </div>
+
+              <!-- Simulation switches -->
+              <div class="flex items-center justify-between p-3.5 bg-[#0b0c10]/40 rounded-xl border border-gray-800/60">
+                <div class="space-y-0.5">
+                  <span class="text-xs font-bold text-white uppercase tracking-wide block">Mock AI Simulation Mode</span>
+                  <span class="text-[10px] text-gray-400 font-medium">Bypass API live call & perform canvas/url simulation. (Use for local testing without depleting token quota).</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" v-model="settings.mock_ai_generation" class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#66fcf1]"></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 2. Client Access configuration -->
+            <div class="space-y-4 pt-5">
+              <h3 class="text-sm font-bold text-[#66fcf1] uppercase tracking-wider">Client API Configuration</h3>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client Authentication API Key (X-API-Key)</label>
+                <div class="flex gap-2">
+                  <input 
+                    v-model="settings.backend_api_key"
+                    type="text" 
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  />
+                  <button @click="generateNewClientKey" class="bg-gray-800 hover:bg-gray-750 px-3.5 rounded-xl border border-gray-700 text-xs font-bold text-white transition-colors" title="Generate New Key">
+                    <i class="fa-solid fa-key"></i>
+                  </button>
+                </div>
+                <p class="text-[9px] text-gray-500 leading-normal">Kunci rahasia ini harus dipasang pada header <code>X-API-Key</code> aplikasi frontend Vercel untuk mengamankan backend API VPS Anda dari penyusup.</p>
+              </div>
+            </div>
+
+            <!-- 3. Security Credentials Change -->
+            <div class="space-y-4 pt-5">
+              <h3 class="text-sm font-bold text-red-400 uppercase tracking-wider">Admin Password Change</h3>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">New Password</label>
+                <input 
+                  v-model="newPassword"
+                  type="password" 
+                  placeholder="Kosongkan jika tidak diganti" 
+                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t border-gray-800">
+            <button 
+              @click="saveSettings" 
+              class="bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ================= MEDIA LIGHTBOX MODAL ================= -->
+    <div v-if="lightboxUrl" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+      <button @click="lightboxUrl = null" class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"><i class="fa-solid fa-xmark"></i></button>
+      <div class="max-w-3xl max-h-[85vh] flex items-center justify-center rounded-2xl overflow-hidden bg-[#1f2833] p-2">
+        <img v-if="lightboxType === 'image'" :src="lightboxUrl" class="max-w-full max-h-[80vh] object-contain rounded-lg" />
+        <video v-else :src="lightboxUrl" controls autoplay class="max-w-full max-h-[80vh] object-contain rounded-lg"></video>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="py-6 border-t border-gray-800 bg-[#0b0c10]/40 text-center text-xs text-gray-500">
+    &copy; 2026 YouTube Creator Summit AI Photobooth. All rights reserved.
+  </footer>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const token = ref(localStorage.getItem('admin_token') || '');
+        const loginPassword = ref('');
+        const activeTab = ref('history'); // history, prompts, settings
+        const error = ref('');
+        const alert = ref(null);
+
+        // Data bindings
+        const generations = ref([]);
+        const prompts = ref([]);
+        const selectedPrompt = ref(null);
+        const settings = ref({
+          gemini_api_key: '',
+          gemini_api_endpoint: '',
+          mock_ai_generation: false,
+          backend_api_key: ''
+        });
+        const newPassword = ref('');
+
+        // Lightbox state
+        const lightboxUrl = ref(null);
+        const lightboxType = ref('image');
+
+        const triggerAlert = (message, type = 'success') => {
+          alert.value = { message, type };
+          setTimeout(() => {
+            alert.value = null;
+          }, 4000);
+        };
+
+        const login = async () => {
+          error.value = '';
+          try {
+            const res = await fetch('/api/admin/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: loginPassword.value })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              throw new Error(data.error || 'Login failed.');
+            }
+            token.value = data.token;
+            localStorage.setItem('admin_token', data.token);
+            loginPassword.value = '';
+            initDashboard();
+          } catch (e) {
+            error.value = e.message;
+          }
+        };
+
+        const logout = () => {
+          token.value = '';
+          localStorage.removeItem('admin_token');
+          generations.value = [];
+          prompts.value = [];
+          selectedPrompt.value = null;
+        };
+
+        const fetchSettings = async () => {
+          try {
+            const res = await fetch('/api/admin/settings', {
+              headers: { 'Authorization': `Bearer ${token.value}` }
+            });
+            if (res.status === 403) return logout();
+            const data = await res.json();
+            settings.value = {
+              gemini_api_key: data.gemini_api_key || '',
+              gemini_api_endpoint: data.gemini_api_endpoint || '',
+              mock_ai_generation: data.mock_ai_generation === 1,
+              backend_api_key: data.backend_api_key || ''
+            };
+          } catch (e) {
+            console.error(e);
+          }
+        };
+
+        const saveSettings = async () => {
+          try {
+            const res = await fetch('/api/admin/settings', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.value}`
+              },
+              body: JSON.stringify({
+                gemini_api_key: settings.value.gemini_api_key,
+                gemini_api_endpoint: settings.value.gemini_api_endpoint,
+                mock_ai_generation: settings.value.mock_ai_generation,
+                backend_api_key: settings.value.backend_api_key,
+                new_password: newPassword.value
+              })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            newPassword.value = '';
+            triggerAlert('System settings saved successfully!');
+            fetchSettings();
+          } catch (e) {
+            triggerAlert(e.message, 'error');
+          }
+        };
+
+        const fetchPrompts = async () => {
+          try {
+            const res = await fetch('/api/admin/prompts', {
+              headers: { 'Authorization': `Bearer ${token.value}` }
+            });
+            const data = await res.json();
+            prompts.value = data;
+            if (data.length > 0 && !selectedPrompt.value) {
+              selectedPrompt.value = { ...data[0] };
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        };
+
+        const selectPrompt = (prompt) => {
+          selectedPrompt.value = { ...prompt };
+        };
+
+        const createNewPrompt = () => {
+          const newStyle = {
+            name: '',
+            subtitle: '',
+            gradient: 'linear-gradient(160deg, #5457e6, #0b0d14)',
+            prompt_text: '',
+            isNew: true
+          };
+          selectedPrompt.value = newStyle;
+        };
+
+        const savePrompt = async () => {
+          if (!selectedPrompt.value.name.trim()) {
+            triggerAlert('Name cannot be empty.', 'error');
+            return;
+          }
+          try {
+            const res = await fetch('/api/admin/prompts', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.value}`
+              },
+              body: JSON.stringify(selectedPrompt.value)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            triggerAlert(`Prompt style for "${selectedPrompt.value.name}" saved!`);
+            
+            const savedName = selectedPrompt.value.name;
+            await fetchPrompts();
+            
+            // Re-select saved item to clear isNew flag
+            const found = prompts.value.find(p => p.name === savedName);
+            if (found) selectedPrompt.value = { ...found };
+          } catch (e) {
+            triggerAlert(e.message, 'error');
+          }
+        };
+
+        const deletePrompt = async (name) => {
+          if (!confirm(`Are you sure you want to delete filter style "${name}"?`)) return;
+          try {
+            const res = await fetch(`/api/admin/prompts/${encodeURIComponent(name)}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token.value}` }
+            });
+            if (!res.ok) throw new Error('Delete failed.');
+            triggerAlert(`Filter style "${name}" deleted successfully.`);
+            selectedPrompt.value = null;
+            fetchPrompts();
+          } catch (e) {
+            triggerAlert(e.message, 'error');
+          }
+        };
+
+        const fetchGenerations = async () => {
+          try {
+            const res = await fetch('/api/admin/generations', {
+              headers: { 'Authorization': `Bearer ${token.value}` }
+            });
+            const data = await res.json();
+            generations.value = data;
+          } catch (e) {
+            console.error(e);
+          }
+        };
+
+        const deleteLog = async (id) => {
+          if (!confirm('Are you sure you want to delete this generation history record? This cannot be undone.')) return;
+          try {
+            const res = await fetch(`/api/admin/generations/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token.value}` }
+            });
+            if (!res.ok) throw new Error('Delete failed.');
+            triggerAlert('History log deleted!');
+            fetchGenerations();
+          } catch (e) {
+            triggerAlert(e.message, 'error');
+          }
+        };
+
+        const generateNewClientKey = () => {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+          let key = 'PB-';
+          for (let i = 0; i < 24; i++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          settings.value.backend_api_key = key;
+        };
+
+        const formatTimestamp = (dateStr) => {
+          if (!dateStr) return '';
+          const d = new Date(dateStr);
+          return d.toLocaleString('id-ID');
+        };
+
+        const openLightbox = (url, type) => {
+          lightboxUrl.value = url;
+          lightboxType.value = type;
+        };
+
+        const downloadFile = (dataUrl, mode, name, id) => {
+          if (!dataUrl) return;
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          const slug = name.toLowerCase().replace(/\s+/g, '_');
+          a.download = mode === 'sticker' ? `result_${slug}_${id}.png` : `result_${slug}_${id}.mp4`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+
+        const initDashboard = () => {
+          fetchGenerations();
+          fetchPrompts();
+          fetchSettings();
+        };
+
+        onMounted(() => {
+          if (token.value) {
+            initDashboard();
+          }
+        });
+
+        return {
+          token,
+          loginPassword,
+          activeTab,
+          error,
+          alert,
+          generations,
+          prompts,
+          selectedPrompt,
+          settings,
+          newPassword,
+          lightboxUrl,
+          lightboxType,
+          login,
+          logout,
+          saveSettings,
+          selectPrompt,
+          createNewPrompt,
+          savePrompt,
+          deletePrompt,
+          fetchGenerations,
+          deleteLog,
+          generateNewClientKey,
+          formatTimestamp,
+          openLightbox,
+          downloadFile
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
