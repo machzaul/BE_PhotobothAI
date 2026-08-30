@@ -73,6 +73,7 @@
       width: 0;
       height: 0;
       z-index: 10;
+      perspective: 1400px;
     }
 
     .wheel-container {
@@ -81,6 +82,7 @@
       left: 0;
       width: 0;
       height: 0;
+      transform-style: preserve-3d;
     }
 
     /* Custom styles for cards fanning */
@@ -101,6 +103,8 @@
       padding: 8px;
       box-sizing: border-box;
       z-index: 12;
+      transform-style: preserve-3d;
+      backface-visibility: visible;
     }
 
     .showing-card img {
@@ -190,9 +194,9 @@
           <!-- Real Visitor Image -->
           <img v-if="!card.isFallback" :src="card.generated_output" alt="Visitor Lookbook" />
           
-          <!-- Colorful Fallback Card with CodeX Logo -->
-          <div v-else class="fallback-gradient" :style="{ background: getFallbackGradient(index) }">
-            <img src="/codx-logo (1).webp" alt="CODX" class="h-7 w-auto object-contain brightness-0 invert opacity-75" />
+          <!-- Black Fallback Card with CodeX Logo -->
+          <div v-else class="fallback-gradient bg-black border border-white/5" style="width: 100%; aspect-ratio: 1/1; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <img src="/codx-logo (1).webp" alt="CODX" class="h-7 w-auto object-contain brightness-0 invert opacity-40" />
           </div>
 
           <!-- Bottom card label details -->
@@ -308,6 +312,8 @@
         if (activeTimeline) activeTimeline.kill();
 
         const totalCards = 8;
+        const radiusSmall = 100;
+        const radiusLarge = 260;
 
         // 1. Initial State (Reset all cards to vertical overlapping stack)
         for (let i = 0; i < totalCards; i++) {
@@ -317,6 +323,7 @@
             scale: 0.95,
             opacity: 1,
             rotation: 0,
+            rotationY: 0,
             zIndex: 10 + i
           });
         }
@@ -325,40 +332,64 @@
         // Create main timeline
         activeTimeline = gsap.timeline();
 
-        // 2. Fan Out Animation (Elastic expand to R=260px)
-        const radius = 260;
-        
+        // 2. Fan Out Animation (Elastic expand: Stack -> Tight Fan -> Large Circle with 3D Flip)
+        const tightDuration = 0.8;
+        const expandDuration = 0.8;
+        const flipDuration = 0.6;
+
         for (let i = 0; i < totalCards; i++) {
           const angle = (i * 360) / totalCards;
           const angleRad = (angle * Math.PI) / 180;
-          const targetX = radius * Math.cos(angleRad);
-          const targetY = radius * Math.sin(angleRad);
-          // Rotate tangential to radius
+          
+          // Tight Circle coordinates (like card fan)
+          const tightX = radiusSmall * Math.cos(angleRad);
+          const tightY = radiusSmall * Math.sin(angleRad);
           const cardRotation = angle + 90;
 
+          // Outer Circle coordinates
+          const targetX = radiusLarge * Math.cos(angleRad);
+          const targetY = radiusLarge * Math.sin(angleRad);
+
+          // Phase 2a: Simultaneously fan out to tight circle/fan shape (all cards at once!)
+          activeTimeline.to(`#card-${i}`, {
+            x: tightX,
+            y: tightY,
+            rotation: cardRotation,
+            scale: 0.9,
+            duration: tightDuration,
+            ease: "power2.out"
+          }, 0); // Start at timeline index 0
+
+          // Phase 2b: 3D Flip cards in the middle of transition
+          activeTimeline.to(`#card-${i}`, {
+            rotationY: 180,
+            duration: flipDuration,
+            ease: "power1.inOut"
+          }, tightDuration - 0.2);
+
+          // Phase 2c: Expand outwards to large circle
           activeTimeline.to(`#card-${i}`, {
             x: targetX,
             y: targetY,
-            rotation: cardRotation,
             scale: 1,
-            opacity: 1,
-            duration: 1.5,
-            ease: "elastic.out(1, 0.75)"
-          }, i * 0.1);
+            rotationY: 360,
+            duration: expandDuration,
+            ease: "back.out(1.2)"
+          }, tightDuration + 0.2);
         }
 
         // 3. Start Continuous Slow Rotation of the entire wheel
         activeTimeline.add(() => {
           spinTween = gsap.to('.wheel-container', {
             rotation: 360,
-            duration: 25,
+            duration: 30,
             ease: "none",
             repeat: -1
           });
         });
 
-        // 4. Set timer to Implode (Collapse back after 25 seconds of rotation)
-        activeTimeline.to({}, { duration: 25 }); // wait duration
+        // 4. Set timer to Implode (Collapse back after 22 seconds of rotation)
+        activeTimeline.to({}, { duration: 22 }); // wait duration
 
         // 5. Implode Animation (Gathering cards back to vertical stack)
         for (let i = 0; i < totalCards; i++) {
@@ -366,11 +397,12 @@
             x: 0,
             y: i * -8,
             rotation: 0,
+            rotationY: 0,
             scale: 0.8,
             opacity: 0,
-            duration: 1.0,
-            ease: "power2.inOut"
-          }, `collapse-=${1.0 - (i * 0.05)}`);
+            duration: 1.2,
+            ease: "power3.inOut"
+          }, `collapse-=${1.2 - (i * 0.05)}`);
         }
 
         // On complete collapse, kill spin tween and fetch next batch
