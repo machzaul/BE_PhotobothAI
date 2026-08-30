@@ -11,20 +11,37 @@
   <!-- FontAwesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;850&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anton&display=swap');
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
+      background-color: #050608 !important;
+    }
+    
+    /* Custom scrollbar matching frontend style */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050608;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #10131d;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #5fa8ff;
     }
   </style>
 </head>
-<body class="bg-[#0b0c10] text-[#c5c6c7] min-h-screen flex flex-col justify-between">
+<body class="bg-[#050608] text-[#f3f4f8] min-h-screen flex flex-col justify-between">
 
   <div id="app" class="w-full flex-1 flex flex-col">
     <!-- ================= AUTH LOGIN SCREEN ================= -->
     <div v-if="!token" class="flex-1 flex items-center justify-center px-4 py-12">
-      <div class="max-w-md w-full space-y-8 bg-[#1f2833] p-8 rounded-3xl border border-[#45f3ff]/20 shadow-2xl">
+      <div class="max-w-md w-full space-y-8 bg-[#0b0d14] p-8 rounded-3xl border border-[#45f3ff]/20 shadow-2xl">
         <div class="text-center">
-          <i class="fa-solid fa-camera-retro text-5xl text-[#66fcf1] mb-3"></i>
+          <i class="fa-solid fa-camera-retro text-5xl text-[#5fa8ff] mb-3"></i>
           <h2 class="text-2xl font-extrabold text-white tracking-wide">PHOTOBOOTH AI</h2>
           <p class="mt-2 text-xs text-gray-400">Admin Control Center & CMS Portal</p>
         </div>
@@ -37,7 +54,7 @@
                 v-model="loginPassword" 
                 type="password" 
                 required 
-                class="appearance-none rounded-xl relative block w-full px-4 py-3.5 border border-gray-700 bg-[#0b0c10] text-white focus:outline-none focus:ring-2 focus:ring-[#66fcf1]/50 focus:border-[#66fcf1] text-center text-lg font-bold" 
+                class="appearance-none rounded-xl relative block w-full px-4 py-3.5 border border-gray-700 bg-[#0b0c10] text-white focus:outline-none focus:ring-2 focus:ring-[#5fa8ff]/50 focus:border-[#5fa8ff] text-center text-lg font-bold" 
                 placeholder="••••••••"
               >
             </div>
@@ -50,7 +67,7 @@
           <div>
             <button 
               type="submit" 
-              class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-extrabold rounded-xl text-black bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#66fcf1] transition-all"
+              class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-extrabold rounded-xl text-black bg-[#5fa8ff] hover:bg-[#34368f] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5fa8ff] transition-all"
             >
               Sign In
             </button>
@@ -60,54 +77,51 @@
     </div>
 
     <!-- ================= ADMIN CMS DASHBOARD WORKSPACE ================= -->
-    <div v-else class="flex-1 flex flex-col">
-      <!-- Top Navigation Header -->
-      <nav class="bg-[#1f2833] border-b border-gray-800 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16">
-            <div class="flex items-center gap-3">
-              <i class="fa-solid fa-sliders text-xl text-[#66fcf1]"></i>
-              <span class="text-lg font-extrabold text-white tracking-widest">BE_PHOTOBOOTH_AI</span>
-            </div>
-            
-            <div class="flex items-center gap-6">
-              <div class="flex space-x-1.5">
-                <button 
-                  @click="activeTab = 'history'" 
-                  :class="[activeTab === 'history' ? 'bg-[#66fcf1] text-black font-extrabold' : 'text-gray-300 hover:bg-[#0b0c10] hover:text-white']" 
-                  class="px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
-                >
-                  <i class="fa-solid fa-images mr-1.5"></i>Generations
-                </button>
-                <button 
-                  @click="activeTab = 'prompts'" 
-                  :class="[activeTab === 'prompts' ? 'bg-[#66fcf1] text-black font-extrabold' : 'text-gray-300 hover:bg-[#0b0c10] hover:text-white']" 
-                  class="px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
-                >
-                  <i class="fa-solid fa-file-code mr-1.5"></i>Prompts Config
-                </button>
-                <button 
-                  @click="activeTab = 'settings'" 
-                  :class="[activeTab === 'settings' ? 'bg-[#66fcf1] text-black font-extrabold' : 'text-gray-300 hover:bg-[#0b0c10] hover:text-white']" 
-                  class="px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all"
-                >
-                  <i class="fa-solid fa-gears mr-1.5"></i>API Settings
-                </button>
-              </div>
-
-              <button 
-                @click="logout" 
-                class="text-xs uppercase text-red-400 hover:text-red-300 font-bold border border-red-500/20 hover:border-red-500/50 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                Logout <i class="fa-solid fa-arrow-right-from-bracket ml-1"></i>
-              </button>
-            </div>
+    <div v-else class="flex-1 flex flex-row min-h-[calc(100vh-60px)]">
+      <!-- Left Sidebar Navigation -->
+      <aside class="w-64 bg-[#0b0d14] border-r border-gray-800/80 flex-shrink-0 flex flex-col justify-between py-8 px-5">
+        <div class="space-y-8">
+          <!-- Logo Image -->
+          <div class="flex items-center gap-2.5 px-1.5">
+            <img src="/codx-logo (1).webp" alt="CODX Logo" class="h-6 object-contain" />
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Admin</span>
+          </div>
+          
+          <div class="space-y-1">
+            <button 
+              @click="activeTab = 'history'" 
+              :class="[activeTab === 'history' ? 'bg-[#5fa8ff] text-black font-extrabold' : 'text-gray-300 hover:bg-[#10131d] hover:text-white']" 
+              class="w-full px-4 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-3 text-left font-bold"
+            >
+              <i class="fa-solid fa-images w-4 text-center"></i>Generations
+            </button>
+            <button 
+              @click="activeTab = 'prompts'" 
+              :class="[activeTab === 'prompts' ? 'bg-[#5fa8ff] text-black font-extrabold' : 'text-gray-300 hover:bg-[#10131d] hover:text-white']" 
+              class="w-full px-4 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-3 text-left font-bold"
+            >
+              <i class="fa-solid fa-file-code w-4 text-center"></i>Prompts Config
+            </button>
+            <button 
+              @click="activeTab = 'settings'" 
+              :class="[activeTab === 'settings' ? 'bg-[#5fa8ff] text-black font-extrabold' : 'text-gray-300 hover:bg-[#10131d] hover:text-white']" 
+              class="w-full px-4 py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-3 text-left font-bold"
+            >
+              <i class="fa-solid fa-gears w-4 text-center"></i>API Settings
+            </button>
           </div>
         </div>
-      </nav>
+
+        <button 
+          @click="logout" 
+          class="w-full text-xs uppercase text-red-400 hover:text-red-300 font-bold border border-red-500/20 hover:border-red-500/50 px-4 py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          Logout <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </aside>
 
       <!-- Main Body Container -->
-      <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main class="flex-1 overflow-y-auto px-8 py-8 bg-[#050608]">
         
         <!-- Alerts Banner -->
         <div v-if="alert" :class="[alert.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400']" class="mb-6 p-4 rounded-2xl border text-xs font-bold flex justify-between items-center shadow-lg">
@@ -122,13 +136,13 @@
               <h2 class="text-xl font-extrabold text-white">Generations History Log</h2>
               <p class="text-xs text-gray-400">Review, view captures, and download images or videos created by booth users.</p>
             </div>
-            <button @click="fetchGenerations" class="bg-[#1f2833] hover:bg-[#202b38] border border-gray-800 px-4 py-2.5 rounded-xl text-xs text-white font-bold transition-all">
+            <button @click="fetchGenerations" class="bg-[#0b0d14] hover:bg-[#202b38] border border-gray-800 px-4 py-2.5 rounded-xl text-xs text-white font-bold transition-all">
               <i class="fa-solid fa-rotate mr-1.5"></i>Refresh
             </button>
           </div>
 
           <!-- History Grid/Table Card -->
-          <div class="bg-[#1f2833] rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
+          <div class="bg-[#0b0d14] rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
@@ -144,7 +158,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-800 text-xs font-semibold">
                   <tr v-for="log in generations" :key="log.id" class="hover:bg-[#202b38]/40 transition-colors">
-                    <td class="py-4 px-6 font-mono text-[#66fcf1]">{{ log.id }}</td>
+                    <td class="py-4 px-6 font-mono text-[#5fa8ff]">{{ log.id }}</td>
                     <td class="py-4 px-6 font-mono text-gray-300">{{ log.user_id }}</td>
                     <td class="py-4 px-6 text-gray-400">{{ formatTimestamp(log.created_at) }}</td>
                     <td class="py-4 px-6">
@@ -177,7 +191,7 @@
                         <button 
                           v-else-if="log.booth_mode === 'video' && log.generated_output" 
                           @click="openLightbox(log.generated_output, 'video')"
-                          class="w-10 h-10 rounded-xl border border-gray-700 bg-[#0b0c10] flex items-center justify-center hover:text-[#66fcf1] transition-colors"
+                          class="w-10 h-10 rounded-xl border border-gray-700 bg-[#0b0c10] flex items-center justify-center hover:text-[#5fa8ff] transition-colors"
                         >
                           <i class="fa-solid fa-circle-play text-lg text-purple-400"></i>
                         </button>
@@ -225,7 +239,7 @@
                 v-for="prompt in prompts" 
                 :key="prompt.name"
                 @click="selectPrompt(prompt)"
-                :class="[selectedPrompt && selectedPrompt.name === prompt.name ? 'border-[#66fcf1] bg-[#66fcf1]/10 text-white font-bold' : 'border-gray-800 bg-[#1f2833] hover:bg-[#202b38] text-gray-300']"
+                :class="[selectedPrompt && selectedPrompt.name === prompt.name ? 'border-[#5fa8ff] bg-[#5fa8ff]/10 text-white font-bold' : 'border-gray-800 bg-[#0b0d14] hover:bg-[#202b38] text-gray-300']"
                 class="w-full text-left p-3.5 rounded-2xl border text-xs uppercase tracking-wider transition-all flex items-center justify-between"
               >
                 <div class="flex items-center gap-2">
@@ -247,7 +261,7 @@
 
           <!-- Editor area -->
           <div class="md:col-span-3 text-left">
-            <div v-if="selectedPrompt" class="bg-[#1f2833] border border-gray-800 rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div v-if="selectedPrompt" class="bg-[#0b0d14] border border-gray-800 rounded-3xl p-6 space-y-4 shadow-2xl">
               <div class="flex justify-between items-center border-b border-gray-800 pb-3">
                 <div>
                   <h3 class="text-lg font-extrabold text-white uppercase tracking-wider">
@@ -255,7 +269,7 @@
                   </h3>
                   <p class="text-xs text-gray-400">Configure instructions, subheadings and gradients passed to frontend lookbook.</p>
                 </div>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-white/5 border border-white/10 tracking-widest text-[#66fcf1]">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-white/5 border border-white/10 tracking-widest text-[#5fa8ff]">
                   {{ selectedPrompt.name === 'Video Snap' ? 'Video' : 'Sticker' }}
                 </span>
               </div>
@@ -270,7 +284,7 @@
                     type="text"
                     :disabled="!selectedPrompt.isNew"
                     placeholder="e.g. Vintage Anime"
-                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1] disabled:opacity-50"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff] disabled:opacity-50"
                   />
                 </div>
 
@@ -280,7 +294,7 @@
                   <div class="flex items-center gap-3 p-4 bg-[#0b0c10]/40 rounded-xl border border-gray-800/60 h-full">
                     <label class="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" v-model="selectedPrompt.is_active" :true-value="1" :false-value="0" class="sr-only peer">
-                      <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#66fcf1]"></div>
+                      <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5fa8ff]"></div>
                     </label>
                     <span class="text-xs font-bold text-gray-300 uppercase tracking-wide">Tampilkan di Frontend (Active)</span>
                   </div>
@@ -298,7 +312,7 @@
                           type="file" 
                           accept="image/*" 
                           @change="handleImageUpload" 
-                          class="block w-full text-[10px] text-gray-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#1f2833] file:text-white hover:file:bg-[#202b38] file:cursor-pointer"
+                          class="block w-full text-[10px] text-gray-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#0b0d14] file:text-white hover:file:bg-[#202b38] file:cursor-pointer"
                         />
                         <button 
                           v-if="selectedPrompt.example_image" 
@@ -320,7 +334,7 @@
                     v-model="selectedPrompt.subtitle"
                     type="text"
                     placeholder="e.g. Retro anime style · neon borders · classic"
-                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff]"
                   />
                 </div>
 
@@ -331,7 +345,7 @@
                     v-model="selectedPrompt.gradient"
                     type="text"
                     placeholder="linear-gradient(160deg, #ff007f, #7f00ff)"
-                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff]"
                   />
                 </div>
 
@@ -341,7 +355,7 @@
                   <textarea 
                     v-model="selectedPrompt.prompt_text"
                     rows="10"
-                    class="w-full bg-[#0b0c10] border border-gray-800 text-gray-200 rounded-2xl p-4 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#66fcf1] transition-all resize-y"
+                    class="w-full bg-[#0b0c10] border border-gray-800 text-gray-200 rounded-2xl p-4 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#5fa8ff] transition-all resize-y"
                   ></textarea>
                 </div>
               </div>
@@ -359,20 +373,20 @@
 
                 <button 
                   @click="savePrompt" 
-                  class="bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
+                  class="bg-[#5fa8ff] hover:bg-[#34368f] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
                 >
                   Save Prompt Style
                 </button>
               </div>
             </div>
-            <div v-else class="h-full bg-[#1f2833]/30 border border-dashed border-gray-800 rounded-3xl flex items-center justify-center p-12 text-gray-500 font-bold">
+            <div v-else class="h-full bg-[#0b0d14]/30 border border-dashed border-gray-800 rounded-3xl flex items-center justify-center p-12 text-gray-500 font-bold">
               Pilih salah satu filter di kolom kiri untuk mulai mengedit prompt template.
             </div>
           </div>
         </div>
 
         <!-- TAB 3: API SETTINGS & KEY MANAGEMENT -->
-        <div v-if="activeTab === 'settings'" class="max-w-2xl mx-auto bg-[#1f2833] border border-gray-800 rounded-3xl p-6 space-y-6 shadow-2xl text-left">
+        <div v-if="activeTab === 'settings'" class="max-w-2xl mx-auto bg-[#0b0d14] border border-gray-800 rounded-3xl p-6 space-y-6 shadow-2xl text-left">
           <div>
             <h2 class="text-xl font-extrabold text-white">System Settings</h2>
             <p class="text-xs text-gray-400">Configure key values, database status, and API authentication parameters.</p>
@@ -381,7 +395,7 @@
           <div class="space-y-4 divide-y divide-gray-800">
             <!-- 1. Google Gemini Config -->
             <div class="space-y-4 pt-1">
-              <h3 class="text-sm font-bold text-[#66fcf1] uppercase tracking-wider">Google Gemini API</h3>
+              <h3 class="text-sm font-bold text-[#5fa8ff] uppercase tracking-wider">Google Gemini API</h3>
               
               <div class="space-y-1">
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gemini API Key</label>
@@ -389,7 +403,7 @@
                   v-model="settings.gemini_api_key"
                   type="text" 
                   placeholder="AIzaSy..." 
-                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff]"
                 />
               </div>
 
@@ -398,7 +412,7 @@
                 <input 
                   v-model="settings.gemini_api_endpoint"
                   type="text" 
-                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff]"
                 />
               </div>
 
@@ -410,21 +424,21 @@
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" v-model="settings.mock_ai_generation" class="sr-only peer">
-                  <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#66fcf1]"></div>
+                  <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5fa8ff]"></div>
                 </label>
               </div>
             </div>
 
             <!-- 2. Client Access configuration -->
             <div class="space-y-4 pt-5">
-              <h3 class="text-sm font-bold text-[#66fcf1] uppercase tracking-wider">Client API Configuration</h3>
+              <h3 class="text-sm font-bold text-[#5fa8ff] uppercase tracking-wider">Client API Configuration</h3>
               <div class="space-y-1">
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Client Authentication API Key (X-API-Key)</label>
                 <div class="flex gap-2">
                   <input 
                     v-model="settings.backend_api_key"
                     type="text" 
-                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                    class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff]"
                   />
                   <button @click="generateNewClientKey" class="bg-gray-800 hover:bg-gray-750 px-3.5 rounded-xl border border-gray-700 text-xs font-bold text-white transition-colors" title="Generate New Key">
                     <i class="fa-solid fa-key"></i>
@@ -443,7 +457,7 @@
                   v-model="newPassword"
                   type="password" 
                   placeholder="Kosongkan jika tidak diganti" 
-                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1]"
+                  class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#5fa8ff]"
                 />
               </div>
             </div>
@@ -452,7 +466,7 @@
           <div class="flex justify-end pt-4 border-t border-gray-800">
             <button 
               @click="saveSettings" 
-              class="bg-[#66fcf1] hover:bg-[#45a29e] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
+              class="bg-[#5fa8ff] hover:bg-[#34368f] hover:text-white text-black font-extrabold px-6 py-3 rounded-xl text-xs uppercase tracking-widest transition-all"
             >
               Save Settings
             </button>
@@ -465,7 +479,7 @@
     <!-- ================= MEDIA LIGHTBOX MODAL ================= -->
     <div v-if="lightboxUrl" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
       <button @click="lightboxUrl = null" class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"><i class="fa-solid fa-xmark"></i></button>
-      <div class="max-w-3xl max-h-[85vh] flex items-center justify-center rounded-2xl overflow-hidden bg-[#1f2833] p-2">
+      <div class="max-w-3xl max-h-[85vh] flex items-center justify-center rounded-2xl overflow-hidden bg-[#0b0d14] p-2">
         <img v-if="lightboxType === 'image'" :src="lightboxUrl" class="max-w-full max-h-[80vh] object-contain rounded-lg" />
         <video v-else :src="lightboxUrl" controls autoplay class="max-w-full max-h-[80vh] object-contain rounded-lg"></video>
       </div>
