@@ -66,66 +66,7 @@
       <!-- Digital Tech Grid overlay -->
       <div class="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]"></div>
 
-      <!-- Cyber HUD Widgets (Decorations to look like a control center) -->
-      <!-- Left side stats widget (hidden on mobile) -->
-      <div class="hidden lg:flex absolute left-8 top-1/2 -translate-y-1/2 flex-col gap-6 z-10 w-64 text-left font-mono pointer-events-none" id="hud-widget-left">
-        <div class="border border-gray-800 bg-[#0b0d14]/75 backdrop-blur-md p-4 rounded-xl relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#45f3ff]"></div>
-          <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#45f3ff]"></div>
-          <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#45f3ff]"></div>
-          <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#45f3ff]"></div>
-          <div class="text-[#5fa8ff] text-[10px] uppercase font-bold tracking-widest mb-2 border-b border-gray-800 pb-1 flex justify-between items-center">
-            <span>CORE NODE SCAN</span>
-            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-          </div>
-          <div class="space-y-1 text-[9px] text-gray-400">
-            <div>HOST IP: <span class="text-white">127.0.0.1</span></div>
-            <div>PORT DETECTED: <span class="text-white">5000</span></div>
-            <div>DB ENGINE: <span class="text-white">SQLITE3 / ACTIVE</span></div>
-            <div>CORE STATUS: <span class="text-emerald-400">OPERATIONAL</span></div>
-          </div>
-        </div>
-        <div class="border border-gray-800 bg-[#0b0d14]/75 backdrop-blur-md p-4 rounded-xl relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#45f3ff]"></div>
-          <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#45f3ff]"></div>
-          <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#45f3ff]"></div>
-          <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#45f3ff]"></div>
-          <div class="text-[#5fa8ff] text-[10px] uppercase font-bold tracking-widest mb-2 border-b border-gray-800 pb-1">SERVER METRICS</div>
-          <div class="space-y-2 text-[9px]">
-            <div>
-              <div class="flex justify-between mb-0.5 text-gray-400"><span>MEMORY LOAD</span><span class="text-white">41.8%</span></div>
-              <div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width: 41.8%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-0.5 text-gray-400"><span>CPU TEMP</span><span class="text-white">48°C</span></div>
-              <div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: 58%"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Right side log widget (hidden on mobile) -->
-      <div class="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-6 z-10 w-64 text-left font-mono pointer-events-none" id="hud-widget-right">
-        <div class="border border-gray-800 bg-[#0b0d14]/75 backdrop-blur-md p-4 rounded-xl relative overflow-hidden h-[240px] flex flex-col">
-          <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#45f3ff]"></div>
-          <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#45f3ff]"></div>
-          <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#45f3ff]"></div>
-          <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#45f3ff]"></div>
-          <div class="text-[#5fa8ff] text-[10px] uppercase font-bold tracking-widest mb-2 border-b border-gray-800 pb-1">SECURE ACCESS LOG</div>
-          <div class="flex-1 overflow-hidden text-[8px] text-gray-500 space-y-1.5 select-none" id="mini-log-console">
-            <div>[08:27:12] INITIALIZING SECURITY SHIELD...</div>
-            <div>[08:27:13] ENCRYPTED STACK DEPLOYED (AES-256)</div>
-            <div>[08:27:15] WAITING FOR DECRYPTION KEY...</div>
-            <div v-if="authStatus === 'checking'">[LOG] DECRYPTING ENVELOPE KEYS...</div>
-            <div v-if="authStatus === 'failed'" class="text-red-400 font-bold">[ERR] AUTHENTICATION ATTEMPT FAILED.</div>
-            <div v-if="authStatus === 'granted'" class="text-emerald-400 font-bold">[OK] CORE DECRYPT OK. INITIATING HANDSHAKE.</div>
-          </div>
-          <div class="mt-2 text-[8px] text-[#45f3ff]/60 border-t border-gray-800/80 pt-1 flex justify-between">
-            <span>PING: 14ms</span>
-            <span>UPTIME: {{ systemUptime }}</span>
-          </div>
-        </div>
-      </div>
 
       <!-- Corner Brackets for screen -->
       <div class="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[#5fa8ff]/40 pointer-events-none"></div>
@@ -872,16 +813,11 @@
       gsap.set('#login-title', { opacity: 0, y: 15 });
       gsap.set('#input-container', { opacity: 0, x: -20 });
       gsap.set('#submit-btn-login', { opacity: 0, y: 15 });
-      gsap.set('#hud-widget-left', { opacity: 0, x: -30 });
-      gsap.set('#hud-widget-right', { opacity: 0, x: 30 });
-
       introTl.to('#login-card-3d', { scale: 1, opacity: 1, rotateX: 0, duration: 1.0, ease: 'back.out(1.4)' })
              .to('#logo-hologram', { scale: 1, opacity: 1, rotationY: 0, duration: 0.9, ease: 'power4.out' }, '-=0.6')
              .to('#login-title', { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
              .to('#input-container', { opacity: 1, x: 0, duration: 0.5 }, '-=0.4')
-             .to('#submit-btn-login', { opacity: 1, y: 0, duration: 0.5 }, '-=0.4')
-             .to('#hud-widget-left', { opacity: 1, x: 0, duration: 0.7 }, '-=0.3')
-             .to('#hud-widget-right', { opacity: 1, x: 0, duration: 0.7 }, '-=0.7');
+             .to('#submit-btn-login', { opacity: 1, y: 0, duration: 0.5 }, '-=0.4');
     };
 
     const runErrorShake = () => {

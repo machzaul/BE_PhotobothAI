@@ -394,6 +394,63 @@ app.delete('/api/admin/generations/:id', verifyAdminToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// SHOWING PORTAL API ENDPOINTS
+// ==========================================
+
+// Middleware to verify showing page JWT token
+const verifyShowingToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ error: 'No token provided.' });
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token.' });
+    if (decoded.role !== 'showing' && !decoded.admin) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+// Showing Login (checking against admin password hash for simplicity)
+app.post('/api/showing/login', async (req, res) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required.' });
+  }
+
+  try {
+    const db = await getDatabase();
+    const settings = await db.get('SELECT admin_password_hash FROM settings WHERE id = 1');
+    const isMatch = await bcrypt.compare(password, settings.admin_password_hash);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid password credentials.' });
+    }
+
+    // Sign with showing role
+    const token = jwt.sign({ role: 'showing' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Fetch Latest 8 Generations for Circular Showing page
+app.get('/api/showing/generations', verifyShowingToken, async (req, res) => {
+  try {
+    const db = await getDatabase();
+    // Get latest 8 successful sticker generations
+    const generations = await db.all(
+      "SELECT id, generated_output, filter_name FROM generations WHERE generated_output IS NOT NULL AND generated_output != '' AND booth_mode = 'sticker' ORDER BY id DESC LIMIT 8"
+    );
+    res.json(generations);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch generations: ' + err.message });
+  }
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`=================================================`);

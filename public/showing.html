@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CODX Photo Booth AI - Circular Showroom</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- GSAP for Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anton&display=swap');
+    
+    :root {
+      --bg: #050608;
+      --panel: #0b0d14;
+      --line: rgba(255,255,255,.08);
+      --ink: #f3f4f8;
+      --accent: #5fa8ff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--ink);
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Grid overlay for digital tech look */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.15;
+      background-image: 
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: center;
+      mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
+    }
+
+    /* Glowing dots */
+    .glow-dot {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(95, 168, 255, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Passcode Glassmorphism */
+    .glass-card {
+      background: rgba(11, 13, 20, 0.8);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Rotating wheel container */
+    .wheel-outer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      z-index: 10;
+    }
+
+    .wheel-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* Custom styles for cards fanning */
+    .showing-card {
+      position: absolute;
+      width: 140px;
+      height: 200px;
+      margin-left: -70px;
+      margin-top: -100px;
+      border-radius: 16px;
+      background: #0b0d14;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      transform-origin: center center;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      box-sizing: border-box;
+      z-index: 12;
+    }
+
+    .showing-card img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #050608;
+    }
+
+    /* Gradient fallbacks */
+    .fallback-gradient {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app" class="relative w-screen h-screen flex flex-col items-center justify-center select-none overflow-hidden bg-[#050608]">
+  <div class="grid-overlay"></div>
+  <div class="glow-dot" style="top: 10%; left: 10%;"></div>
+  <div class="glow-dot" style="bottom: 10%; right: 10%;"></div>
+
+  <!-- AUTH/PASSCODE SCREEN -->
+  <div v-if="!isAuthenticated" class="z-20 w-full max-w-sm px-6 py-8 rounded-3xl glass-card text-center shadow-2xl relative">
+    <div class="w-16 h-16 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+      <img src="/codx-logo (1).webp" alt="CODX Logo" class="h-6 object-contain" />
+    </div>
+    <h2 class="text-xl font-extrabold text-white tracking-widest uppercase mb-1">SHOWING PORTAL</h2>
+    <p class="text-xs text-gray-400 mb-6">Masukkan kata sandi admin untuk mengakses layar tayang hasil foto.</p>
+    
+    <form @submit.prevent="login" class="space-y-4 text-left">
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Access Passcode</label>
+        <input 
+          v-model="password" 
+          type="password" 
+          required 
+          placeholder="••••••••"
+          class="w-full bg-[#050608] border border-gray-800 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#5fa8ff]/50 focus:border-[#5fa8ff] text-center font-bold"
+        />
+      </div>
+      
+      <div v-if="error" class="text-red-400 text-xs font-semibold text-center mt-2">{{ error }}</div>
+      
+      <button 
+        type="submit" 
+        class="w-full py-3 bg-[#5fa8ff] text-black font-extrabold rounded-2xl text-xs uppercase tracking-widest hover:bg-[#34368f] hover:text-white transition-all duration-300"
+      >
+        Otorisasi Portal
+      </button>
+    </form>
+    
+    <!-- Security Explanation Info -->
+    <div class="mt-8 pt-4 border-t border-white/5 text-[9px] text-gray-500 leading-relaxed text-left space-y-1.5">
+      <div class="font-bold text-gray-400 uppercase tracking-wider mb-1"><i class="fa-solid fa-shield-halved mr-1"></i> Mengapa Proteksi Sandi Diaktifkan?</div>
+      <p>• <b>Keamanan Data Pengunjung:</b> Layar ini menayangkan foto-foto langsung yang diambil di bilik foto. Kata sandi membatasi hak akses agar tidak disalahgunakan atau diekspor pihak asing.</p>
+      <p>• <b>Pencegahan Scraping:</b> Pembatasan token otorisasi menghalangi serangan bot otomatis yang mencoba memanen data gambar pengunjung dari server.</p>
+    </div>
+  </div>
+
+  <!-- MAIN CIRCULAR PRESENTATION DISPLAY -->
+  <div v-else class="relative w-full h-full flex items-center justify-center z-10">
+    
+    <!-- TOP HEADER -->
+    <div class="absolute top-8 left-10 flex items-center gap-3 z-30 pointer-events-none">
+      <img src="/codx-logo (1).webp" alt="CODX Logo" class="h-6 object-contain" />
+      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-l border-white/10 pl-3">Live Showroom</span>
+    </div>
+
+    <!-- CENTER HUB -->
+    <div class="w-64 h-64 rounded-full bg-[#0b0d14]/90 backdrop-blur-md shadow-[0_0_50px_rgba(95,168,255,0.15)] flex flex-col items-center justify-center border border-white/10 p-6 text-center select-none z-30 absolute">
+      <img src="/codx-logo (1).webp" alt="CODX Logo" class="h-9 object-contain mb-3 drop-shadow-[0_0_10px_rgba(95,168,255,0.4)]" />
+      <div class="text-sm font-bold tracking-wider text-white">We are CODX</div>
+      <div class="text-[9px] uppercase tracking-widest text-[#5fa8ff] font-bold mt-1">with Photo Booth AI</div>
+    </div>
+
+    <!-- CARDS WHEEL CONTAINER -->
+    <div class="wheel-outer">
+      <div class="wheel-container">
+        <!-- 8 Dynamic Cards -->
+        <div 
+          v-for="(card, index) in activeCards" 
+          :key="card.id"
+          class="showing-card"
+          :id="'card-' + index"
+        >
+          <!-- Real Visitor Image -->
+          <img v-if="!card.isFallback" :src="card.generated_output" alt="Visitor Lookbook" />
+          
+          <!-- Colorful Fallback Card with CodeX Logo -->
+          <div v-else class="fallback-gradient" :style="{ background: getFallbackGradient(index) }">
+            <img src="/codx-logo (1).webp" alt="CODX" class="h-7 w-auto object-contain brightness-0 invert opacity-75" />
+          </div>
+
+          <!-- Bottom card label details -->
+          <div class="mt-2.5 text-center flex-1 flex flex-col justify-center">
+            <span class="text-[8px] font-bold text-gray-500 uppercase tracking-widest block">Style</span>
+            <span class="text-[9.5px] font-extrabold text-white tracking-wide truncate mt-0.5">{{ card.filter_name }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RE-AUTHENTICATE / EXIT BUTTON -->
+    <button @click="logout" class="absolute bottom-6 right-8 text-xs text-gray-500 hover:text-white border border-white/5 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-all z-30">
+      Logout <i class="fa-solid fa-arrow-right-from-bracket ml-1.5"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref, onMounted } = Vue;
+
+  createApp({
+    setup() {
+      const isAuthenticated = ref(!!localStorage.getItem('showingToken'));
+      const password = ref('');
+      const error = ref('');
+      const activeCards = ref([]);
+      let spinTween = null;
+      let activeTimeline = null;
+
+      // Fallback colorful gradient list
+      const gradients = [
+        'linear-gradient(135deg, #ff007f 0%, #7f00ff 100%)',
+        'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
+        'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)',
+        'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        'linear-gradient(135deg, #111827 0%, #1f2937 100%)'
+      ];
+
+      const getFallbackGradient = (index) => {
+        return gradients[index % gradients.length];
+      };
+
+      const login = async () => {
+        error.value = '';
+        try {
+          const res = await fetch('/api/showing/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: password.value })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            localStorage.setItem('showingToken', data.token);
+            isAuthenticated.value = true;
+            password.value = '';
+            fetchGenerations();
+          } else {
+            error.value = data.error || 'Password invalid.';
+          }
+        } catch (e) {
+          error.value = 'Failed to connect to the server.';
+        }
+      };
+
+      const logout = () => {
+        localStorage.removeItem('showingToken');
+        isAuthenticated.value = false;
+        if (spinTween) spinTween.kill();
+        if (activeTimeline) activeTimeline.kill();
+      };
+
+      const fetchGenerations = async () => {
+        try {
+          const res = await fetch('/api/showing/generations', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('showingToken')}`
+            }
+          });
+          if (res.status === 401 || res.status === 403) {
+            logout();
+            return;
+          }
+          const data = await res.json();
+          
+          // Pad list to exactly 8 cards
+          const padded = [...data];
+          while (padded.length < 8) {
+            padded.push({
+              id: 'fallback-' + padded.length,
+              isFallback: true,
+              generated_output: null,
+              filter_name: 'CODX Style'
+            });
+          }
+          activeCards.value = padded;
+          
+          // Initiate animation cycle
+          Vue.nextTick(() => {
+            animateCycle();
+          });
+        } catch (e) {
+          console.error('Failed to fetch data, retrying in 5 seconds...', e);
+          setTimeout(fetchGenerations, 5000);
+        }
+      };
+
+      const animateCycle = () => {
+        if (spinTween) spinTween.kill();
+        if (activeTimeline) activeTimeline.kill();
+
+        // 1. Initial State (Reset all cards to center of center hub)
+        gsap.set('.showing-card', {
+          x: 0,
+          y: 0,
+          scale: 0.2,
+          opacity: 0,
+          rotation: 0
+        });
+        gsap.set('.wheel-container', { rotation: 0 });
+
+        // Create main timeline
+        activeTimeline = gsap.timeline();
+
+        // 2. Fan Out Animation (Elastic expand to R=260px)
+        const radius = 260;
+        const totalCards = 8;
+        
+        for (let i = 0; i < totalCards; i++) {
+          const angle = (i * 360) / totalCards;
+          const angleRad = (angle * Math.PI) / 180;
+          const targetX = radius * Math.cos(angleRad);
+          const targetY = radius * Math.sin(angleRad);
+          // Rotate tangential to radius
+          const cardRotation = angle + 90;
+
+          activeTimeline.to(`#card-${i}`, {
+            x: targetX,
+            y: targetY,
+            rotation: cardRotation,
+            scale: 1,
+            opacity: 1,
+            duration: 1.5,
+            ease: "elastic.out(1, 0.75)"
+          }, i * 0.1);
+        }
+
+        // 3. Start Continuous Slow Rotation of the entire wheel
+        activeTimeline.add(() => {
+          spinTween = gsap.to('.wheel-container', {
+            rotation: 360,
+            duration: 25,
+            ease: "none",
+            repeat: -1
+          });
+        });
+
+        // 4. Set timer to Implode (Collapse back after 25 seconds of rotation)
+        activeTimeline.to({}, { duration: 25 }); // wait duration
+
+        // 5. Implode Animation (Gathering cards back)
+        for (let i = 0; i < totalCards; i++) {
+          activeTimeline.to(`#card-${i}`, {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 0.1,
+            opacity: 0,
+            duration: 1.0,
+            ease: "power2.inOut"
+          }, `collapse-=${1.0 - (i * 0.05)}`);
+        }
+
+        // On complete collapse, kill spin tween and fetch next batch
+        activeTimeline.eventCallback("onComplete", () => {
+          if (spinTween) spinTween.kill();
+          gsap.set('.wheel-container', { rotation: 0 });
+          fetchGenerations(); // Cycle runs infinitely
+        });
+      };
+
+      onMounted(() => {
+        if (isAuthenticated.value) {
+          fetchGenerations();
+        }
+      });
+
+      return {
+        isAuthenticated,
+        password,
+        error,
+        activeCards,
+        login,
+        logout,
+        getFallbackGradient
+      };
+    }
+  }).mount('#app');
+</script>
+
+</body>
+</html>
