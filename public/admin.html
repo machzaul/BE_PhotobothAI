@@ -8,10 +8,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Vue 3 CDN -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <!-- FontAwesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anton&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Anton&display=swap');
     body {
       font-family: 'Inter', sans-serif;
       background-color: #050608 !important;
@@ -32,47 +34,227 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #5fa8ff;
     }
+
+    /* Cyberpunk perspective layout */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+
+    /* Scanline Animation */
+    @keyframes scanline-anim {
+      0% {
+        transform: translateY(-20%);
+      }
+      100% {
+        transform: translateY(22000%);
+      }
+    }
+    .animate-scanline {
+      animation: scanline-anim 6s linear infinite;
+    }
   </style>
 </head>
 <body class="bg-[#050608] text-[#f3f4f8] min-h-screen flex flex-col justify-between">
 
   <div id="app" class="w-full flex-1 flex flex-col">
     <!-- ================= AUTH LOGIN SCREEN ================= -->
-    <div v-if="!token" class="flex-1 flex items-center justify-center px-4 py-12">
-      <div class="max-w-md w-full space-y-8 bg-[#0b0d14] p-8 rounded-3xl border border-[#45f3ff]/20 shadow-2xl">
-        <div class="text-center">
-          <i class="fa-solid fa-camera-retro text-5xl text-[#5fa8ff] mb-3"></i>
-          <h2 class="text-2xl font-extrabold text-white tracking-wide">PHOTOBOOTH AI</h2>
-          <p class="mt-2 text-xs text-gray-400">Admin Control Center & CMS Portal</p>
+    <div v-if="!token" class="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden bg-[#050608] perspective-1000" id="login-screen-wrapper">
+      
+      <!-- Interactive Particles Background -->
+      <canvas id="login-canvas" class="absolute inset-0 z-0 pointer-events-none"></canvas>
+
+      <!-- Digital Tech Grid overlay -->
+      <div class="absolute inset-0 z-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]"></div>
+
+      <!-- Cyber HUD Widgets (Decorations to look like a control center) -->
+      <!-- Left side stats widget (hidden on mobile) -->
+      <div class="hidden lg:flex absolute left-8 top-1/2 -translate-y-1/2 flex-col gap-6 z-10 w-64 text-left font-mono pointer-events-none" id="hud-widget-left">
+        <div class="border border-gray-800 bg-[#0b0d14]/75 backdrop-blur-md p-4 rounded-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#45f3ff]"></div>
+          <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#45f3ff]"></div>
+          <div class="text-[#5fa8ff] text-[10px] uppercase font-bold tracking-widest mb-2 border-b border-gray-800 pb-1 flex justify-between items-center">
+            <span>CORE NODE SCAN</span>
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+          </div>
+          <div class="space-y-1 text-[9px] text-gray-400">
+            <div>HOST IP: <span class="text-white">127.0.0.1</span></div>
+            <div>PORT DETECTED: <span class="text-white">5000</span></div>
+            <div>DB ENGINE: <span class="text-white">SQLITE3 / ACTIVE</span></div>
+            <div>CORE STATUS: <span class="text-emerald-400">OPERATIONAL</span></div>
+          </div>
         </div>
-        <form class="mt-8 space-y-6" @submit.prevent="login">
-          <div class="rounded-md shadow-sm -space-y-px">
+        <div class="border border-gray-800 bg-[#0b0d14]/75 backdrop-blur-md p-4 rounded-xl relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#45f3ff]"></div>
+          <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#45f3ff]"></div>
+          <div class="text-[#5fa8ff] text-[10px] uppercase font-bold tracking-widest mb-2 border-b border-gray-800 pb-1">SERVER METRICS</div>
+          <div class="space-y-2 text-[9px]">
             <div>
-              <label for="password" class="sr-only">Password</label>
-              <input 
-                id="password" 
-                v-model="loginPassword" 
-                type="password" 
-                required 
-                class="appearance-none rounded-xl relative block w-full px-4 py-3.5 border border-gray-700 bg-[#0b0c10] text-white focus:outline-none focus:ring-2 focus:ring-[#5fa8ff]/50 focus:border-[#5fa8ff] text-center text-lg font-bold" 
-                placeholder="••••••••"
+              <div class="flex justify-between mb-0.5 text-gray-400"><span>MEMORY LOAD</span><span class="text-white">41.8%</span></div>
+              <div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-blue-500" style="width: 41.8%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-0.5 text-gray-400"><span>CPU TEMP</span><span class="text-white">48°C</span></div>
+              <div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: 58%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side log widget (hidden on mobile) -->
+      <div class="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col gap-6 z-10 w-64 text-left font-mono pointer-events-none" id="hud-widget-right">
+        <div class="border border-gray-800 bg-[#0b0d14]/75 backdrop-blur-md p-4 rounded-xl relative overflow-hidden h-[240px] flex flex-col">
+          <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#45f3ff]"></div>
+          <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#45f3ff]"></div>
+          <div class="text-[#5fa8ff] text-[10px] uppercase font-bold tracking-widest mb-2 border-b border-gray-800 pb-1">SECURE ACCESS LOG</div>
+          <div class="flex-1 overflow-hidden text-[8px] text-gray-500 space-y-1.5 select-none" id="mini-log-console">
+            <div>[08:27:12] INITIALIZING SECURITY SHIELD...</div>
+            <div>[08:27:13] ENCRYPTED STACK DEPLOYED (AES-256)</div>
+            <div>[08:27:15] WAITING FOR DECRYPTION KEY...</div>
+            <div v-if="authStatus === 'checking'">[LOG] DECRYPTING ENVELOPE KEYS...</div>
+            <div v-if="authStatus === 'failed'" class="text-red-400 font-bold">[ERR] AUTHENTICATION ATTEMPT FAILED.</div>
+            <div v-if="authStatus === 'granted'" class="text-emerald-400 font-bold">[OK] CORE DECRYPT OK. INITIATING HANDSHAKE.</div>
+          </div>
+          <div class="mt-2 text-[8px] text-[#45f3ff]/60 border-t border-gray-800/80 pt-1 flex justify-between">
+            <span>PING: 14ms</span>
+            <span>UPTIME: {{ systemUptime }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corner Brackets for screen -->
+      <div class="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-[#5fa8ff]/40 pointer-events-none"></div>
+      <div class="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-[#5fa8ff]/40 pointer-events-none"></div>
+      <div class="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-[#5fa8ff]/40 pointer-events-none"></div>
+      <div class="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-[#5fa8ff]/40 pointer-events-none"></div>
+
+      <!-- Main Login Card Container -->
+      <div 
+        id="login-card-3d" 
+        class="max-w-md w-full relative z-10 transition-all duration-300"
+        style="transform-style: preserve-3d; backface-visibility: hidden;"
+      >
+        <!-- Background decorative ambient glow -->
+        <div class="absolute -inset-1.5 bg-gradient-to-r from-[#45f3ff] to-[#5457e6] rounded-[28px] opacity-25 blur-xl group-hover:opacity-40 transition duration-1000 z-0"></div>
+
+        <!-- The actual card -->
+        <div class="relative bg-[#0b0d14]/85 backdrop-blur-xl p-8 rounded-3xl border border-[#45f3ff]/20 shadow-2xl overflow-hidden z-10">
+          
+          <!-- Moving cyber grid scanning bar -->
+          <div class="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#45f3ff] to-transparent opacity-40 top-0 pointer-events-none animate-scanline"></div>
+
+          <!-- Top corner brackets on the card itself -->
+          <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#45f3ff]"></div>
+          <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#45f3ff]"></div>
+          <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#45f3ff]"></div>
+
+          <div class="text-center mb-8 relative">
+            <!-- Hologram ring and Logo container -->
+            <div class="relative w-24 h-24 mx-auto mb-4 flex items-center justify-center select-none" id="logo-hologram">
+              <!-- Holographic background concentric rings -->
+              <div class="absolute inset-0 border border-dashed border-[#45f3ff]/30 rounded-full animate-[spin_12s_linear_infinite]"></div>
+              <div class="absolute inset-2 border border-[#5fa8ff]/20 rounded-full animate-[spin_8s_linear_infinite_reverse]"></div>
+              <div class="absolute inset-4 border border-dashed border-[#5457e6]/40 rounded-full animate-[spin_20s_linear_infinite]"></div>
+              <div class="absolute inset-0 bg-[#45f3ff]/5 rounded-full filter blur-md"></div>
+              
+              <!-- CODX WebP Logo centered -->
+              <img src="/codx-logo (1).webp" alt="CODX Logo" class="h-8 object-contain relative z-10 drop-shadow-[0_0_10px_rgba(69,243,255,0.7)]" id="codx-logo-login" />
+            </div>
+
+            <!-- Titles -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-800 bg-[#050608] text-[9px] font-mono text-gray-400 uppercase tracking-widest mb-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#45f3ff] animate-pulse"></span>
+              <span>SECURE ACCESS TERMINAL</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-white tracking-widest font-mono uppercase" id="login-title">
+              CODX BOOTH
+            </h2>
+            <p class="text-[10px] text-gray-400 font-mono tracking-widest mt-1">ADMINISTRATOR CMS DECRYPT PROTOCOL</p>
+          </div>
+
+          <!-- Normal Form State -->
+          <form v-if="authStatus !== 'checking' && authStatus !== 'granted'" class="space-y-6 relative z-10" @submit.prevent="login">
+            <div class="space-y-2 text-left relative">
+              <label for="password" class="text-[9px] font-mono font-bold text-gray-400 uppercase tracking-widest block ml-1">
+                ENTER SECURITY PASS-KEY
+              </label>
+              <div class="relative rounded-xl overflow-hidden border border-gray-800 bg-[#050608] transition-all duration-300 focus-within:border-[#45f3ff]/70 focus-within:shadow-[0_0_15px_rgba(69,243,255,0.15)]" id="input-container">
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                  <i class="fa-solid fa-key text-xs"></i>
+                </div>
+                <input 
+                  id="password" 
+                  v-model="loginPassword" 
+                  type="password" 
+                  required 
+                  class="appearance-none block w-full pl-10 pr-10 py-3.5 bg-transparent text-white focus:outline-none text-center text-lg font-bold tracking-widest placeholder:text-gray-700 font-mono" 
+                  placeholder="••••••••"
+                >
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-mono text-[#45f3ff]/50 select-none">
+                  [SHL]
+                </div>
+              </div>
+            </div>
+
+            <!-- Error message container -->
+            <div 
+              v-if="error" 
+              class="text-red-400 text-[10px] text-center font-bold font-mono bg-red-500/10 p-3 rounded-xl border border-red-500/20 animate-[pulse_1.5s_infinite] select-none"
+              id="error-msg-box"
+            >
+              <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> {{ error }}
+            </div>
+
+            <div>
+              <button 
+                type="submit" 
+                class="group relative w-full flex justify-center py-3.5 px-4 border border-[#45f3ff]/30 text-xs font-bold font-mono rounded-xl text-white bg-[#0b0d14] hover:bg-[#45f3ff] hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#45f3ff] transition-all duration-300 uppercase tracking-widest overflow-hidden shadow-lg"
+                id="submit-btn-login"
               >
+                <!-- Glowing borders on hover -->
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-[#45f3ff] to-[#5457e6] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></span>
+                <span class="relative z-10 group-hover:text-black transition-colors duration-300">AUTHENTICATE DECRYPT</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Decrypting Status Screen Overlay (displays inside card) -->
+          <div v-else class="py-8 text-center space-y-6 relative z-10 font-mono" id="decrypt-screen">
+            <div class="text-[#45f3ff] text-xl font-bold tracking-widest animate-pulse">
+              {{ authStatus === 'checking' ? 'DECRYPTING...' : 'ACCESS GRANTED' }}
+            </div>
+            
+            <div class="w-full bg-gray-900 h-2.5 rounded-full overflow-hidden relative border border-gray-800">
+              <div 
+                class="h-full bg-gradient-to-r from-[#45f3ff] to-[#5457e6] transition-all duration-100" 
+                :style="{ width: decryptProgress + '%' }"
+              ></div>
+            </div>
+
+            <div class="text-[10px] text-gray-400 space-y-1">
+              <div>KEY MATCHING STAGE: <span class="text-white font-bold">{{ decryptProgress }}%</span></div>
+              <div class="text-[8px] text-gray-500 italic">
+                {{ decryptProgress < 30 ? 'READING HARDWARE STACK...' : decryptProgress < 60 ? 'BRUTE-FORCING POLICIES...' : decryptProgress < 90 ? 'DECRYPTING HEADER SIGNS...' : 'SYNCHRONIZING SECURE SESSION...' }}
+              </div>
+            </div>
+
+            <!-- Fingerprint/Shield Scanning Graphic -->
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center text-3xl">
+              <i 
+                class="fa-solid" 
+                :class="[authStatus === 'checking' ? 'fa-shield-halved text-[#45f3ff] animate-pulse' : 'fa-circle-check text-emerald-400 scale-125 transition-transform duration-300']"
+              ></i>
+              <div v-if="authStatus === 'checking'" class="absolute -inset-2 border border-[#45f3ff] rounded-full scale-110 opacity-30 animate-ping"></div>
             </div>
           </div>
 
-          <div v-if="error" class="text-red-400 text-xs text-center font-bold bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
-            {{ error }}
-          </div>
-
-          <div>
-            <button 
-              type="submit" 
-              class="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-extrabold rounded-xl text-black bg-[#5fa8ff] hover:bg-[#34368f] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5fa8ff] transition-all"
-            >
-              Sign In
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
 
@@ -494,6 +676,293 @@
   <script>
     const { createApp, ref, onMounted } = Vue;
 
+    // ==========================================
+    // GSAP LOGOUT / INITIAL TRANSITION UTILITIES
+    // ==========================================
+    let canvasAnimFrame = null;
+    let resizeHandler = null;
+    let mouseMoveHandler = null;
+    let mouseLeaveHandler = null;
+
+    const initLoginEffects = (authStatusRef, systemUptimeRef) => {
+      // 1. Uptime Clock Simulator
+      let secs = 29381; // Starting from a cool number
+      const uptimeInterval = setInterval(() => {
+        if (!document.getElementById('login-screen-wrapper')) {
+          clearInterval(uptimeInterval);
+          return;
+        }
+        secs++;
+        const h = String(Math.floor(secs / 3600)).padStart(2, '0');
+        const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
+        const s = String(secs % 60).padStart(2, '0');
+        systemUptimeRef.value = `${h}:${m}:${s}`;
+      }, 1000);
+
+      // 2. Interactive Canvas Particles
+      const canvas = document.getElementById('login-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+        
+        let particles = [];
+        const numParticles = Math.min(70, Math.floor((width * height) / 18000));
+        const maxDist = 110;
+        const mouse = { x: null, y: null, radius: 140 };
+        
+        // Track mouse position relative to canvas
+        mouseMoveHandler = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          mouse.x = e.clientX - rect.left;
+          mouse.y = e.clientY - rect.top;
+        };
+        window.addEventListener('mousemove', mouseMoveHandler);
+
+        mouseLeaveHandler = () => {
+          mouse.x = null;
+          mouse.y = null;
+        };
+        window.addEventListener('mouseout', mouseLeaveHandler);
+
+        // Responsive resizing
+        resizeHandler = () => {
+          if (!canvas) return;
+          width = canvas.width = canvas.offsetWidth;
+          height = canvas.height = canvas.offsetHeight;
+        };
+        window.addEventListener('resize', resizeHandler);
+
+        class Particle {
+          constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.8;
+            this.vy = (Math.random() - 0.5) * 0.8;
+            this.radius = Math.random() * 1.5 + 1;
+          }
+          update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+            
+            // Mouse Repulsion Force
+            if (mouse.x !== null && mouse.y !== null) {
+              let dx = this.x - mouse.x;
+              let dy = this.y - mouse.y;
+              let dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < mouse.radius) {
+                let force = (mouse.radius - dist) / mouse.radius;
+                this.x += (dx / dist) * force * 2.5;
+                this.y += (dy / dist) * force * 2.5;
+              }
+            }
+          }
+          draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(69, 243, 255, 0.7)';
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < numParticles; i++) {
+          particles.push(new Particle());
+        }
+
+        const animateParticles = () => {
+          const checkCanvas = document.getElementById('login-canvas');
+          if (!checkCanvas) {
+            cancelAnimationFrame(canvasAnimFrame);
+            return; // Terminate loop if canvas is unmounted
+          }
+          ctx.clearRect(0, 0, width, height);
+          
+          for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            
+            // Draw connection mesh lines between nodes
+            for (let j = i + 1; j < particles.length; j++) {
+              let dx = particles[i].x - particles[j].x;
+              let dy = particles[i].y - particles[j].y;
+              let dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < maxDist) {
+                let alpha = (1 - (dist / maxDist)) * 0.16;
+                ctx.strokeStyle = `rgba(95, 168, 255, ${alpha})`;
+                ctx.lineWidth = 0.5;
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.stroke();
+              }
+            }
+
+            // Draw line to pointer
+            if (mouse.x !== null && mouse.y !== null) {
+              let dx = particles[i].x - mouse.x;
+              let dy = particles[i].y - mouse.y;
+              let dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < mouse.radius) {
+                let alpha = (1 - (dist / mouse.radius)) * 0.28;
+                ctx.strokeStyle = `rgba(69, 243, 255, ${alpha})`;
+                ctx.lineWidth = 0.6;
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(mouse.x, mouse.y);
+                ctx.stroke();
+              }
+            }
+          }
+          canvasAnimFrame = requestAnimationFrame(animateParticles);
+        };
+        animateParticles();
+      }
+
+      // 3. 3D Card Tilt Interaction
+      const wrapper = document.getElementById('login-screen-wrapper');
+      const card3D = document.getElementById('login-card-3d');
+      if (wrapper && card3D) {
+        wrapper.addEventListener('mousemove', (e) => {
+          const wWidth = wrapper.offsetWidth;
+          const wHeight = wrapper.offsetHeight;
+          const mouseX = e.clientX - wrapper.offsetLeft;
+          const mouseY = e.clientY - wrapper.offsetTop;
+          
+          const xPercent = (mouseX / wWidth) - 0.5;
+          const yPercent = (mouseY / wHeight) - 0.5;
+          
+          const maxRotX = 7;
+          const maxRotY = 7;
+          
+          gsap.to(card3D, {
+            rotateY: xPercent * maxRotY,
+            rotateX: -yPercent * maxRotX,
+            transformPerspective: 1000,
+            ease: 'power1.out',
+            duration: 0.4
+          });
+
+          // Move HUD widgets slightly for parallax depth
+          const leftWidget = document.getElementById('hud-widget-left');
+          const rightWidget = document.getElementById('hud-widget-right');
+          if (leftWidget) {
+            gsap.to(leftWidget, { x: xPercent * -14, y: yPercent * -14, ease: 'power1.out', duration: 0.6 });
+          }
+          if (rightWidget) {
+            gsap.to(rightWidget, { x: xPercent * 14, y: yPercent * -14, ease: 'power1.out', duration: 0.6 });
+          }
+        });
+
+        wrapper.addEventListener('mouseleave', () => {
+          gsap.to(card3D, { rotateY: 0, rotateX: 0, ease: 'power2.out', duration: 0.8 });
+          const leftWidget = document.getElementById('hud-widget-left');
+          const rightWidget = document.getElementById('hud-widget-right');
+          if (leftWidget) gsap.to(leftWidget, { x: 0, y: 0, ease: 'power2.out', duration: 0.8 });
+          if (rightWidget) gsap.to(rightWidget, { x: 0, y: 0, ease: 'power2.out', duration: 0.8 });
+        });
+      }
+
+      // 4. Staggered Intro Sequence
+      const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      gsap.set('#login-card-3d', { scale: 0.88, opacity: 0, rotateX: 12 });
+      gsap.set('#logo-hologram', { scale: 0, opacity: 0, rotationY: 180 });
+      gsap.set('#login-title', { opacity: 0, y: 15 });
+      gsap.set('#input-container', { opacity: 0, x: -20 });
+      gsap.set('#submit-btn-login', { opacity: 0, y: 15 });
+      gsap.set('#hud-widget-left', { opacity: 0, x: -30 });
+      gsap.set('#hud-widget-right', { opacity: 0, x: 30 });
+
+      introTl.to('#login-card-3d', { scale: 1, opacity: 1, rotateX: 0, duration: 1.0, ease: 'back.out(1.4)' })
+             .to('#logo-hologram', { scale: 1, opacity: 1, rotationY: 0, duration: 0.9, ease: 'power4.out' }, '-=0.6')
+             .to('#login-title', { opacity: 1, y: 0, duration: 0.5 }, '-=0.5')
+             .to('#input-container', { opacity: 1, x: 0, duration: 0.5 }, '-=0.4')
+             .to('#submit-btn-login', { opacity: 1, y: 0, duration: 0.5 }, '-=0.4')
+             .to('#hud-widget-left', { opacity: 1, x: 0, duration: 0.7 }, '-=0.3')
+             .to('#hud-widget-right', { opacity: 1, x: 0, duration: 0.7 }, '-=0.7');
+    };
+
+    const runErrorShake = () => {
+      const card = document.getElementById('login-card-3d');
+      const glow = document.querySelector('#login-card-3d .bg-gradient-to-r');
+      const box = document.getElementById('error-msg-box');
+
+      if (glow) {
+        gsap.to(glow, {
+          backgroundImage: 'linear-gradient(to right, #ff3b30, #ff9500)',
+          opacity: 0.5,
+          scale: 1.04,
+          duration: 0.1
+        });
+      }
+
+      // Quick back-and-forth shake timeline
+      const shakeTl = gsap.timeline();
+      shakeTl.to(card, { x: -8, duration: 0.05 })
+             .to(card, { x: 8, duration: 0.05 })
+             .to(card, { x: -6, duration: 0.05 })
+             .to(card, { x: 6, duration: 0.05 })
+             .to(card, { x: -4, duration: 0.05 })
+             .to(card, { x: 4, duration: 0.05 })
+             .to(card, { x: 0, duration: 0.05 });
+
+      if (box) {
+        gsap.fromTo(box, { scale: 0.92, opacity: 0 }, { scale: 1, opacity: 1, ease: 'back.out(1.5)', duration: 0.3 });
+      }
+
+      gsap.delayedCall(1.2, () => {
+        if (glow) {
+          gsap.to(glow, {
+            backgroundImage: 'linear-gradient(to right, #45f3ff, #5457e6)',
+            opacity: 0.25,
+            scale: 1.0,
+            duration: 0.5
+          });
+        }
+      });
+    };
+
+    const runSuccessTransition = (onComplete) => {
+      const card = document.getElementById('login-card-3d');
+      const glow = document.querySelector('#login-card-3d .bg-gradient-to-r');
+      const widgets = document.querySelectorAll('#hud-widget-left, #hud-widget-right');
+
+      if (glow) {
+        gsap.to(glow, {
+          backgroundImage: 'linear-gradient(to right, #10b981, #45f3ff)',
+          opacity: 0.85,
+          scale: 1.06,
+          duration: 0.3
+        });
+      }
+
+      const outTl = gsap.timeline({ onComplete });
+      outTl.to(widgets, { opacity: 0, y: -25, duration: 0.3, stagger: 0.08 })
+           .to(card, {
+             rotationY: 90,
+             scaleY: 0.01,
+             scaleX: 1.08,
+             opacity: 0.15,
+             duration: 0.5,
+             ease: 'power3.in'
+           }, '-=0.15')
+           .to(card, {
+             scaleX: 0,
+             opacity: 0,
+             duration: 0.25,
+             ease: 'power4.in'
+           });
+    };
+
+    const cleanLoginEventListeners = () => {
+      if (mouseMoveHandler) window.removeEventListener('mousemove', mouseMoveHandler);
+      if (mouseLeaveHandler) window.removeEventListener('mouseout', mouseLeaveHandler);
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+      cancelAnimationFrame(canvasAnimFrame);
+    };
+
     createApp({
       setup() {
         const token = ref(localStorage.getItem('admin_token') || '');
@@ -501,6 +970,11 @@
         const activeTab = ref('history'); // history, prompts, settings
         const error = ref('');
         const alert = ref(null);
+
+        // Cyber authentication states
+        const authStatus = ref('idle'); // idle, checking, granted, failed
+        const decryptProgress = ref(0);
+        const systemUptime = ref('00:00:00');
 
         // Data bindings
         const generations = ref([]);
@@ -527,6 +1001,16 @@
 
         const login = async () => {
           error.value = '';
+          authStatus.value = 'checking';
+          decryptProgress.value = 0;
+
+          // Animate verification progress bar to make it visual
+          let progressTimer = setInterval(() => {
+            if (decryptProgress.value < 85) {
+              decryptProgress.value += Math.floor(Math.random() * 8) + 2;
+            }
+          }, 80);
+
           try {
             const res = await fetch('/api/admin/login', {
               method: 'POST',
@@ -534,15 +1018,45 @@
               body: JSON.stringify({ password: loginPassword.value })
             });
             const data = await res.json();
+            
+            clearInterval(progressTimer);
+
             if (!res.ok) {
               throw new Error(data.error || 'Login failed.');
             }
-            token.value = data.token;
-            localStorage.setItem('admin_token', data.token);
-            loginPassword.value = '';
-            initDashboard();
+
+            // Finish the progress bar on successful check
+            let finalizeTimer = setInterval(() => {
+              if (decryptProgress.value < 100) {
+                decryptProgress.value = Math.min(100, decryptProgress.value + 15);
+              } else {
+                clearInterval(finalizeTimer);
+                authStatus.value = 'granted';
+                
+                // Sweep dashboard entry transition
+                setTimeout(() => {
+                  runSuccessTransition(() => {
+                    cleanLoginEventListeners();
+                    token.value = data.token;
+                    localStorage.setItem('admin_token', data.token);
+                    loginPassword.value = '';
+                    authStatus.value = 'idle';
+                    initDashboard();
+                  });
+                }, 400);
+              }
+            }, 45);
+
           } catch (e) {
+            clearInterval(progressTimer);
+            authStatus.value = 'failed';
+            decryptProgress.value = 0;
             error.value = e.message;
+            
+            setTimeout(() => {
+              runErrorShake();
+              authStatus.value = 'idle';
+            }, 100);
           }
         };
 
@@ -552,6 +1066,11 @@
           generations.value = [];
           prompts.value = [];
           selectedPrompt.value = null;
+          
+          // Re-initialize high-tech login features once login screen mounts
+          setTimeout(() => {
+            initLoginEffects(authStatus, systemUptime);
+          }, 150);
         };
 
         const fetchSettings = async () => {
@@ -755,9 +1274,24 @@
           fetchSettings();
         };
 
+        // Focus behaviors to animate grid activity
+        const onInputFocus = () => {
+          const grid = document.querySelector('#login-screen-wrapper div.opacity-20');
+          if (grid) gsap.to(grid, { opacity: 0.38, ease: 'power2.out', duration: 0.3 });
+        };
+        const onInputBlur = () => {
+          const grid = document.querySelector('#login-screen-wrapper div.opacity-20');
+          if (grid) gsap.to(grid, { opacity: 0.20, ease: 'power2.out', duration: 0.4 });
+        };
+
         onMounted(() => {
           if (token.value) {
             initDashboard();
+          } else {
+            // Setup canvas particles, GSAP timeline, and 3D card tilt
+            setTimeout(() => {
+              initLoginEffects(authStatus, systemUptime);
+            }, 150);
           }
         });
 
@@ -774,6 +1308,9 @@
           newPassword,
           lightboxUrl,
           lightboxType,
+          authStatus,
+          decryptProgress,
+          systemUptime,
           login,
           logout,
           saveSettings,
@@ -788,7 +1325,9 @@
           openLightbox,
           downloadFile,
           handleImageUpload,
-          resolveExampleImage
+          resolveExampleImage,
+          onInputFocus,
+          onInputBlur
         };
       }
     }).mount('#app');
