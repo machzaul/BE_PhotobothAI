@@ -462,59 +462,84 @@
     }
     .theme-list {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       overflow-y: auto;
       padding-bottom: 8px;
       margin-bottom: 12px;
     }
     .theme-card {
       border: 1px solid var(--line);
-      padding: 15px 16px;
+      padding: 10px;
       background: var(--panel);
       display: flex;
-      align-items: center;
-      gap: 13px;
+      flex-direction: column;
+      gap: 8px;
       cursor: pointer;
-      position: relative;
-      border-left: 2px solid transparent;
-      transition: border-color .15s ease, background .15s ease;
+      border-radius: 16px;
+      transition: border-color .15s ease, background .15s ease, transform .1s ease;
+      box-sizing: border-box;
     }
     .theme-card:active {
-      transform: scale(.995);
+      transform: scale(.96);
     }
     .theme-card.selected {
-      border-left-color: var(--accent-ice);
+      border-color: var(--accent-ice);
       background: var(--panel-2);
-      border-color: var(--accent-deep);
+      box-shadow: 0 0 10px rgba(95, 168, 255, 0.2);
     }
-    .theme-chip {
-      width: 30px;
-      height: 30px;
-      flex-shrink: 0;
+    .theme-image-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      border: 4px solid var(--line);
+      overflow: visible;
+      box-sizing: border-box;
+      background: #000;
+    }
+    .theme-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+      display: block;
+    }
+    .sparkle-badge {
+      position: absolute;
+      bottom: -6px;
+      left: 6px;
+      background: #0b0d14;
       border: 1px solid var(--line);
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      z-index: 2;
     }
-    .theme-card b {
-      font-size: 13px;
-      letter-spacing: .3px;
-      display: block;
+    .theme-info {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 2px;
+    }
+    .theme-title {
+      font-size: 12px;
       color: var(--ink);
-    }
-    .theme-card span {
-      font-size: 10.5px;
-      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.2;
       display: block;
-      margin-top: 2px;
     }
-    .theme-idx {
-      margin-left: auto;
-      font-family: 'JetBrains Mono';
-      font-size: 10px;
-      color: var(--muted-2);
-    }
-    .theme-card.selected .theme-idx {
-      color: var(--accent-ice);
+    .theme-desc {
+      font-size: 9.5px;
+      color: var(--muted);
+      line-height: 1.3;
+      display: block;
     }
 
     /* ===================== 5. GENERATING ===================== */
@@ -638,7 +663,7 @@
       .countdown-num { font-size: 56px; }
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-BdOmOuZX.js"></script>
+  <script type="module" crossorigin src="/assets/index-Cm33TSY6.js"></script>
 </head>
 <body>
 
@@ -736,7 +761,7 @@
         </div>
       </div>
       
-      <!-- List of 7 filters dynamically bound -->
+      <!-- List of filters dynamically bound in 2-column grid layout -->
       <div class="theme-list">
         <div 
           v-for="(filter, index) in filters" 
@@ -745,12 +770,19 @@
           :class="{selected: selectedFilter === filter.name}"
           class="theme-card"
         >
-          <div class="theme-chip" :style="{background: filter.gradient}"></div>
-          <div>
-            <b>{{ filter.name }}</b>
-            <span>{{ filter.subtitle }}</span>
+          <div class="theme-image-wrapper" :style="{ borderColor: getBorderColor(filter) }">
+            <img :src="getFilterImage(filter)" alt="filter preview" class="theme-image">
+            <!-- Star/Sparkle Badge -->
+            <div class="sparkle-badge">
+              <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-[#f5af19] stroke-[#0b0d14] stroke-[1.5]">
+                <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
+              </svg>
+            </div>
           </div>
-          <div class="theme-idx mono">{{ String(index + 1).padStart(2, '0') }}</div>
+          <div class="theme-info">
+            <b class="theme-title">{{ filter.name }}</b>
+            <span class="theme-desc">{{ filter.subtitle }}</span>
+          </div>
         </div>
       </div>
 

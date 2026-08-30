@@ -228,7 +228,10 @@
                 :class="[selectedPrompt && selectedPrompt.name === prompt.name ? 'border-[#66fcf1] bg-[#66fcf1]/10 text-white font-bold' : 'border-gray-800 bg-[#1f2833] hover:bg-[#202b38] text-gray-300']"
                 class="w-full text-left p-3.5 rounded-2xl border text-xs uppercase tracking-wider transition-all flex items-center justify-between"
               >
-                <span>{{ prompt.name }}</span>
+                <div class="flex items-center gap-2">
+                  <span :class="[prompt.is_active === 1 || prompt.is_active === true ? 'bg-emerald-500' : 'bg-red-500']" class="w-2 h-2 rounded-full inline-block" :title="prompt.is_active === 1 || prompt.is_active === true ? 'Active' : 'Inactive'"></span>
+                  <span>{{ prompt.name }}</span>
+                </div>
                 <i class="fa-solid fa-angle-right"></i>
               </button>
             </div>
@@ -269,6 +272,45 @@
                     placeholder="e.g. Vintage Anime"
                     class="w-full bg-[#0b0c10] border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#66fcf1] disabled:opacity-50"
                   />
+                </div>
+
+                <!-- Active Toggle and Image Uploader Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Active Toggle -->
+                  <div class="flex items-center gap-3 p-4 bg-[#0b0c10]/40 rounded-xl border border-gray-800/60 h-full">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" v-model="selectedPrompt.is_active" :true-value="1" :false-value="0" class="sr-only peer">
+                      <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#66fcf1]"></div>
+                    </label>
+                    <span class="text-xs font-bold text-gray-300 uppercase tracking-wide">Tampilkan di Frontend (Active)</span>
+                  </div>
+
+                  <!-- Example Image Uploader -->
+                  <div class="space-y-2 p-4 bg-[#0b0c10]/40 rounded-xl border border-gray-800/60">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Example Result Image</label>
+                    <div class="flex items-start gap-4">
+                      <div class="w-16 h-16 rounded-xl border border-gray-800 bg-[#0b0c10] overflow-hidden flex items-center justify-center flex-shrink-0">
+                        <img v-if="selectedPrompt.example_image" :src="resolveExampleImage(selectedPrompt.example_image)" class="w-full h-full object-cover" />
+                        <span v-else class="text-gray-600 text-[10px]">No Image</span>
+                      </div>
+                      <div class="space-y-1.5 flex-1 min-w-0">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          @change="handleImageUpload" 
+                          class="block w-full text-[10px] text-gray-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#1f2833] file:text-white hover:file:bg-[#202b38] file:cursor-pointer"
+                        />
+                        <button 
+                          v-if="selectedPrompt.example_image" 
+                          type="button" 
+                          @click="selectedPrompt.example_image = ''" 
+                          class="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                        >
+                          Hapus Gambar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Subtitle -->
@@ -567,9 +609,27 @@
             subtitle: '',
             gradient: 'linear-gradient(160deg, #5457e6, #0b0d14)',
             prompt_text: '',
+            example_image: '',
+            is_active: 1,
             isNew: true
           };
           selectedPrompt.value = newStyle;
+        };
+
+        const handleImageUpload = (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            selectedPrompt.value.example_image = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const resolveExampleImage = (img) => {
+          if (!img) return '';
+          if (img.startsWith('data:image')) return img;
+          return img.startsWith('http') ? img : `http://${window.location.host}${img.startsWith('/') ? '' : '/'}${img}`;
         };
 
         const savePrompt = async () => {
@@ -712,7 +772,9 @@
           generateNewClientKey,
           formatTimestamp,
           openLightbox,
-          downloadFile
+          downloadFile,
+          handleImageUpload,
+          resolveExampleImage
         };
       }
     }).mount('#app');

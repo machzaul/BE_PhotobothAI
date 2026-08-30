@@ -59,13 +59,13 @@ function verifyAdminToken(req, res, next) {
 // PUBLIC CLIENT GENERATION API ENDPOINTS
 // ==========================================
 
-// 0. Fetch Active Filters list (exposing name, subtitle, gradient; hiding raw prompt_text for security)
+// 0. Fetch Active Filters list (exposing name, subtitle, gradient, example_image, is_active; hiding raw prompt_text for security)
 app.get('/api/filters', verifyClientApiKey, async (req, res) => {
   try {
     const db = await getDatabase();
     // Exclude 'Video Snap' since frontend is focusing on AI Image Lookbook
     const filters = await db.all(
-      "SELECT name, subtitle, gradient FROM prompts WHERE name != 'Video Snap'"
+      "SELECT name, subtitle, gradient, example_image, is_active FROM prompts WHERE name != 'Video Snap' AND is_active = 1"
     );
     res.json(filters);
   } catch (err) {
@@ -341,16 +341,17 @@ app.get('/api/admin/prompts', verifyAdminToken, async (req, res) => {
 
 // Save / Update a Prompt (Admin CMS edit)
 app.post('/api/admin/prompts', verifyAdminToken, async (req, res) => {
-  const { name, subtitle, gradient, prompt_text } = req.body;
+  const { name, subtitle, gradient, prompt_text, example_image, is_active } = req.body;
   if (!name || prompt_text === undefined) {
     return res.status(400).json({ error: 'Missing name or prompt_text.' });
   }
 
   try {
     const db = await getDatabase();
+    const activeVal = (is_active === undefined || is_active === null) ? 1 : (is_active ? 1 : 0);
     await db.run(
-      'INSERT OR REPLACE INTO prompts (name, subtitle, gradient, prompt_text) VALUES (?, ?, ?, ?)', 
-      [name, subtitle || '', gradient || '', prompt_text]
+      'INSERT OR REPLACE INTO prompts (name, subtitle, gradient, prompt_text, example_image, is_active) VALUES (?, ?, ?, ?, ?, ?)', 
+      [name, subtitle || '', gradient || '', prompt_text, example_image || '', activeVal]
     );
     res.json({ success: true, message: `Prompt template "${name}" updated.` });
   } catch (err) {

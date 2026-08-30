@@ -30,7 +30,9 @@ async function getDatabase() {
       name TEXT PRIMARY KEY,
       prompt_text TEXT,
       subtitle TEXT,
-      gradient TEXT
+      gradient TEXT,
+      example_image TEXT,
+      is_active INTEGER DEFAULT 1
     );
 
     CREATE TABLE IF NOT EXISTS generations (
@@ -43,6 +45,18 @@ async function getDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Migration to add example_image and is_active to prompts table if they don't exist
+  try {
+    await db.exec("ALTER TABLE prompts ADD COLUMN example_image TEXT");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    await db.exec("ALTER TABLE prompts ADD COLUMN is_active INTEGER DEFAULT 1");
+  } catch (e) {
+    // Column might already exist
+  }
 
   // Insert default settings if not exists
   const settingsCount = await db.get('SELECT COUNT(*) as count FROM settings');
@@ -790,12 +804,33 @@ Style guidance:
       }
     };
 
+    const defaultImages = {
+      'Renaissance Painting': '/gambar_renainsancepainting.png',
+      'Action Toys': '/gambar_actiontoys.png',
+      'Cereal Box': '/gambar_cerealbox.png',
+      '90s Sitcom': '/gambar_90sitcom.png',
+      'Pixel Art': '/gambar_pixelart.png',
+      'Y2K Nostalgia': '/gambar_y2knostalgia.png',
+      'Bali-esque': '/gambar_baliesque.png'
+    };
+
     for (const [name, data] of Object.entries(defaultPrompts)) {
+      const img = defaultImages[name] || '';
       await db.run(
-        'INSERT OR IGNORE INTO prompts (name, subtitle, gradient, prompt_text) VALUES (?, ?, ?, ?)',
-        [name, data.subtitle, data.gradient, data.prompt_text]
+        'INSERT OR IGNORE INTO prompts (name, subtitle, gradient, prompt_text, example_image, is_active) VALUES (?, ?, ?, ?, ?, 1)',
+        [name, data.subtitle, data.gradient, data.prompt_text, img]
       );
     }
+
+    // Force update example_image for default prompts if they are null or empty
+    for (const [name, img] of Object.entries(defaultImages)) {
+      await db.run(
+        'UPDATE prompts SET example_image = ? WHERE name = ? AND (example_image IS NULL OR example_image = "")',
+        [img, name]
+      );
+    }
+    // Force set is_active = 1 if is_active is currently null
+    await db.run('UPDATE prompts SET is_active = 1 WHERE is_active IS NULL');
   }
 
   return db;
