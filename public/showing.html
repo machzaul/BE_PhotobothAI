@@ -88,11 +88,11 @@
     /* Custom styles for cards fanning */
     .showing-card {
       position: absolute;
-      width: 140px;
-      height: 200px;
-      margin-left: -70px;
-      margin-top: -100px;
-      border-radius: 16px;
+      width: 152px;
+      height: 216px;
+      margin-left: -76px;
+      margin-top: -108px;
+      border-radius: 12px;
       background: #0b0d14;
       border: 1px solid rgba(255,255,255,0.08);
       box-shadow: 0 15px 35px rgba(0,0,0,0.6);
@@ -100,7 +100,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding: 8px;
+      padding: 4px;
       box-sizing: border-box;
       z-index: 12;
       transform-style: preserve-3d;
@@ -111,7 +111,7 @@
       width: 100%;
       aspect-ratio: 1/1;
       object-fit: cover;
-      border-radius: 10px;
+      border-radius: 8px;
       background: #050608;
     }
 
@@ -194,9 +194,9 @@
           <!-- Real Visitor Image -->
           <img v-if="!card.isFallback" :src="card.generated_output" alt="Visitor Lookbook" />
           
-          <!-- Black Fallback Card with CodeX Logo -->
+          <!-- Black Fallback Card with original CodeX Logo -->
           <div v-else class="fallback-gradient bg-black border border-white/5" style="width: 100%; aspect-ratio: 1/1; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative;">
-            <img src="/codx-logo (1).webp" alt="CODX" class="h-7 w-auto object-contain brightness-0 invert opacity-40" />
+            <img src="/codx-logo (1).webp" alt="CODX" class="h-7 w-auto object-contain opacity-80" />
           </div>
 
           <!-- Bottom card label details -->
@@ -312,8 +312,8 @@
         if (activeTimeline) activeTimeline.kill();
 
         const totalCards = 8;
-        const radiusSmall = 100;
-        const radiusLarge = 260;
+        const radiusSmall = 80;
+        const radiusLarge = 200;
 
         // 1. Initial State (Reset all cards to vertical overlapping stack)
         for (let i = 0; i < totalCards; i++) {
